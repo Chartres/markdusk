@@ -30,6 +30,7 @@
     "@codemirror/language": "^6",
     "@codemirror/state": "^6",
     "@codemirror/view": "^6",
+    "@lezer/highlight": "^1.2.3",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2.7.0"
   }

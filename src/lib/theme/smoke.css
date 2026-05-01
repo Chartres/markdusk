@@ -46,30 +46,3 @@ body {
   font-size: 16px;
   line-height: 1.65;
 }
-
-.cm-editor {
-  background: transparent !important;
-  color: var(--md-ink);
-  font-family: inherit;
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 32px 12px;
-}
-
-.cm-editor .cm-content { caret-color: var(--md-accent); }
-.cm-editor .cm-md-active { background: var(--md-active-line); }
-.cm-editor .cm-md-hidden-mark { display: none; }
-.cm-editor .cm-line { padding: 2px 0; }
-
-.cm-editor .tok-heading1, .cm-editor .tok-heading2,
-.cm-editor .tok-heading3, .cm-editor .tok-heading4,
-.cm-editor .tok-heading5, .cm-editor .tok-heading6 {
-  color: var(--md-accent);
-  font-weight: 700;
-}
-
-.cm-editor .tok-monospace { color: var(--md-code-fg); background: var(--md-code-bg); padding: 1px 4px; border-radius: 3px; font-family: "JetBrains Mono", ui-monospace, monospace; }
-.cm-editor .tok-emphasis { font-style: italic; }
-.cm-editor .tok-strong { font-weight: 700; }
-.cm-editor .tok-quote { color: var(--md-quote); border-left: 3px solid var(--md-quote); padding-left: 12px; }
-.cm-editor .tok-link { color: var(--md-accent); }
