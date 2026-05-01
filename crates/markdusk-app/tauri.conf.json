@@ -27,6 +27,14 @@
     "active": true,
     "targets": "app",
     "icon": ["icons/icon.icns"],
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown", "mdown", "mdwn", "mkd"],
+        "name": "Markdown Document",
+        "role": "Editor",
+        "mimeType": "text/markdown"
+      }
+    ],
     "macOS": {
       "minimumSystemVersion": "12.0"
     }
