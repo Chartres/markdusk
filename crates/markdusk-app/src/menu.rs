@@ -49,6 +49,22 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .select_all()
         .build()?;
 
+    let theme_smoke = MenuItemBuilder::with_id("theme:smoke", "Smoke").build(app)?;
+    let theme_amber = MenuItemBuilder::with_id("theme:amber", "Amber").build(app)?;
+    let theme_submenu = SubmenuBuilder::new(app, "Theme")
+        .item(&theme_smoke)
+        .item(&theme_amber)
+        .build()?;
+
+    let app_system = MenuItemBuilder::with_id("appearance:system", "System").build(app)?;
+    let app_light = MenuItemBuilder::with_id("appearance:light", "Light").build(app)?;
+    let app_dark = MenuItemBuilder::with_id("appearance:dark", "Dark").build(app)?;
+    let appearance_submenu = SubmenuBuilder::new(app, "Appearance")
+        .item(&app_system)
+        .item(&app_light)
+        .item(&app_dark)
+        .build()?;
+
     let view_submenu = SubmenuBuilder::new(app, "View")
         .item(
             &MenuItemBuilder::with_id("view:toggle-left", "Toggle Files Sidebar")
@@ -65,6 +81,9 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
                 .accelerator("CmdOrCtrl+Shift+F")
                 .build(app)?,
         )
+        .separator()
+        .item(&theme_submenu)
+        .item(&appearance_submenu)
         .build()?;
 
     let window_submenu = SubmenuBuilder::new(app, "Window")

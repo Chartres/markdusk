@@ -11,6 +11,7 @@
   import StatusBar from "$lib/components/StatusBar.svelte";
   import { EditorSelection } from "@codemirror/state";
   import type { EditorView } from "@codemirror/view";
+  import { applyTheme, applyAppearance } from "$lib/theme/theme";
 
   let container: HTMLDivElement;
   const tabs = createTabsStore({ saver: saveFile });
@@ -116,6 +117,21 @@
           break;
         case "view:focus":
           focusMode = !focusMode;
+          break;
+        case "theme:smoke":
+          applyTheme("smoke");
+          break;
+        case "theme:amber":
+          applyTheme("amber");
+          break;
+        case "appearance:system":
+          applyAppearance("system");
+          break;
+        case "appearance:light":
+          applyAppearance("light");
+          break;
+        case "appearance:dark":
+          applyAppearance("dark");
           break;
       }
     });
