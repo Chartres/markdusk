@@ -23,6 +23,7 @@ const HIDABLE_NODES = new Set([
   "CodeMark",
   "QuoteMark",
   "LinkMark",
+  "FootnoteMark",
 ]);
 
 function buildDecorations(view: EditorView): DecorationSet {

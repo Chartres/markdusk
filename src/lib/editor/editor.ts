@@ -24,6 +24,7 @@ const markduskHighlight = HighlightStyle.define([
   { tag: t.quote, color: "var(--md-quote)", fontStyle: "italic" },
   { tag: t.list, color: "var(--md-ink)" },
   { tag: t.processingInstruction, color: "var(--md-muted)" },
+  { tag: t.attributeName, color: "var(--md-accent)", fontSize: "0.8em", verticalAlign: "super" },
 ]);
 
 const markduskTheme = EditorView.theme({
