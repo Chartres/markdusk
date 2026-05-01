@@ -1,10 +1,11 @@
-import { EditorState, type Extension } from "@codemirror/state";
+import { Compartment, EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
 import { GFM } from "@lezer/markdown";
+import { vim } from "@replit/codemirror-vim";
 import { codeLanguages } from "./code-langs";
 import { livePreview } from "./live-preview";
 import { katexDecorations } from "./katex-deco";
@@ -59,6 +60,14 @@ const markduskTheme = EditorView.theme({
   },
 });
 
+export const vimCompartment = new Compartment();
+
+export function setVim(view: EditorView, enabled: boolean): void {
+  view.dispatch({
+    effects: vimCompartment.reconfigure(enabled ? vim() : []),
+  });
+}
+
 export function createEditor(
   parent: HTMLElement,
   initial: string,
@@ -66,6 +75,7 @@ export function createEditor(
   getActiveDocPath?: () => string | null,
 ): EditorView {
   const extensions: Extension[] = [
+    vimCompartment.of([]),
     history(),
     keymap.of([...defaultKeymap, ...historyKeymap]),
     markdown({

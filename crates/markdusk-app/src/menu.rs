@@ -65,6 +65,13 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .item(&app_dark)
         .build()?;
 
+    let mode_default = MenuItemBuilder::with_id("mode:default", "Default").build(app)?;
+    let mode_vim = MenuItemBuilder::with_id("mode:vim", "Vim").build(app)?;
+    let mode_submenu = SubmenuBuilder::new(app, "Editor Mode")
+        .item(&mode_default)
+        .item(&mode_vim)
+        .build()?;
+
     let view_submenu = SubmenuBuilder::new(app, "View")
         .item(
             &MenuItemBuilder::with_id("view:toggle-left", "Toggle Files Sidebar")
@@ -84,6 +91,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .separator()
         .item(&theme_submenu)
         .item(&appearance_submenu)
+        .item(&mode_submenu)
         .build()?;
 
     let window_submenu = SubmenuBuilder::new(app, "Window")

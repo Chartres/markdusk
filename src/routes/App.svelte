@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
-  import { createEditor } from "$lib/editor/editor";
+  import { createEditor, setVim } from "$lib/editor/editor";
   import { openFile, saveFile } from "$lib/ipc/commands";
   import { createTabsStore } from "$lib/stores/tabs.svelte";
   import { createWorkspaceStore } from "$lib/stores/workspace.svelte";
@@ -21,6 +21,7 @@
   let leftOpen = $state(false);
   let rightOpen = $state(false);
   let focusMode = $state(false);
+  let vimOn = $state(false);
 
   let view: EditorView | undefined;
   let lastTabId: string | undefined;
@@ -132,6 +133,18 @@
           break;
         case "appearance:dark":
           applyAppearance("dark");
+          break;
+        case "mode:default":
+          if (vimOn) {
+            vimOn = false;
+            if (view) setVim(view, false);
+          }
+          break;
+        case "mode:vim":
+          if (!vimOn) {
+            vimOn = true;
+            if (view) setVim(view, true);
+          }
           break;
       }
     });
