@@ -8,7 +8,11 @@ import {
 } from "@codemirror/view";
 import { type Extension, RangeSet, RangeSetBuilder } from "@codemirror/state";
 
-const HIDDEN = Decoration.mark({ class: "cm-md-hidden-mark" });
+// Replace (not mark) — replacement decorations are atomic for cursor navigation,
+// so up/down arrow keys step over hidden markers as a single unit instead of
+// landing inside a `display: none` range. Mark + display:none breaks vertical
+// caret motion around bold/italic/link markers.
+const HIDDEN = Decoration.replace({});
 const ACTIVE_LINE = Decoration.line({ class: "cm-md-active" });
 
 const HIDABLE_NODES = new Set([
@@ -37,7 +41,17 @@ function buildDecorations(view: EditorView): DecorationSet {
         if (!HIDABLE_NODES.has(node.name)) return;
         const line = view.state.doc.lineAt(node.from);
         if (line.number === activeLine.number) return;
-        markBuilder.add(node.from, node.to, HIDDEN);
+        // HeaderMark covers only the '#' chars, not the space after them.
+        // Extend the hidden range over a single trailing space so '# Hello'
+        // renders as 'Hello' (not ' Hello').
+        let nodeTo = node.to;
+        if (
+          node.name === "HeaderMark" &&
+          view.state.doc.sliceString(nodeTo, nodeTo + 1) === " "
+        ) {
+          nodeTo += 1;
+        }
+        markBuilder.add(node.from, nodeTo, HIDDEN);
       },
     });
   }
@@ -49,12 +63,24 @@ export function livePreview(): Extension {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
+      // Cache the last active line so we can skip the (expensive) syntax tree
+      // walk when only the cursor column changed within the same line.
+      private lastActiveLine = -1;
+
       constructor(view: EditorView) {
         this.decorations = buildDecorations(view);
+        this.lastActiveLine = view.state.doc.lineAt(
+          view.state.selection.main.head,
+        ).number;
       }
+
       update(u: ViewUpdate) {
-        if (u.docChanged || u.selectionSet || u.viewportChanged) {
+        const newLine = u.state.doc.lineAt(u.state.selection.main.head).number;
+        const lineChanged = newLine !== this.lastActiveLine;
+
+        if (u.docChanged || u.viewportChanged || lineChanged) {
           this.decorations = buildDecorations(u.view);
+          this.lastActiveLine = newLine;
         }
       }
     },

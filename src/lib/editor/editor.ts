@@ -49,9 +49,6 @@ const markduskTheme = EditorView.theme({
   ".cm-md-active": {
     backgroundColor: "var(--md-active-line)",
   },
-  ".cm-md-hidden-mark": {
-    display: "none",
-  },
 });
 
 export function createEditor(

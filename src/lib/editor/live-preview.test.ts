@@ -17,18 +17,36 @@ function makeView(doc: string, cursorPos = 0): EditorView {
   });
 }
 
+function lineText(view: EditorView, lineNumber: number): string {
+  // CodeMirror renders line elements in document order; index is 0-based.
+  const lines = view.dom.querySelectorAll(".cm-line");
+  return lines[lineNumber - 1]?.textContent ?? "";
+}
+
 describe("livePreview decoration", () => {
-  it("hides heading marker on inactive line", () => {
-    // Cursor in body, line 3 — heading on line 1 should have its marker hidden
+  it("hides the '# ' marker on an inactive heading line", () => {
+    // Cursor on line 3 (body). Line 1 ('# Hello') is inactive — its '# '
+    // marker should be replaced (atomic, invisible) so the rendered line
+    // shows just 'Hello'.
     const view = makeView("# Hello\n\nbody", 9);
-    const hidden = view.dom.querySelectorAll(".cm-md-hidden-mark");
-    expect(hidden.length).toBeGreaterThan(0);
+    expect(lineText(view, 1)).toBe("Hello");
   });
 
-  it("shows heading marker on active line", () => {
-    // Cursor on line 1 (heading) — active-line class should be present
+  it("shows the '# ' marker on the active heading line", () => {
+    // Cursor on line 1 (heading). Marker should be visible for editing.
+    const view = makeView("# Hello\n\nbody", 2);
+    expect(lineText(view, 1)).toBe("# Hello");
+  });
+
+  it("marks the active line with the cm-md-active class", () => {
     const view = makeView("# Hello\n\nbody", 2);
     const headingLine = view.dom.querySelector(".cm-line.cm-md-active");
     expect(headingLine).not.toBeNull();
+  });
+
+  it("hides bold markers ** on an inactive line", () => {
+    // Cursor on line 2; line 1 has '**bold**' — the asterisks should be hidden.
+    const view = makeView("**bold**\nother", 9);
+    expect(lineText(view, 1)).toBe("bold");
   });
 });
