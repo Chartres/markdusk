@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
-  import { createEditor, setVim } from "$lib/editor/editor";
+  import { createEditor, setVim, setTypewriter } from "$lib/editor/editor";
   import { openFile, saveFile } from "$lib/ipc/commands";
   import { createTabsStore } from "$lib/stores/tabs.svelte";
   import { createWorkspaceStore } from "$lib/stores/workspace.svelte";
@@ -66,6 +66,11 @@
   $effect(() => {
     const text = tabs.active.contents;
     void outline.refresh(text);
+  });
+
+  $effect(() => {
+    const enabled = focusMode;
+    if (view) setTypewriter(view, enabled);
   });
 
   function jumpTo(byteOffset: number) {

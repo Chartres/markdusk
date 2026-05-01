@@ -1,5 +1,5 @@
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
-import { EditorView, keymap } from "@codemirror/view";
+import { EditorView, ViewPlugin, type ViewUpdate, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
@@ -68,6 +68,31 @@ export function setVim(view: EditorView, enabled: boolean): void {
   });
 }
 
+const typewriter = ViewPlugin.fromClass(
+  class {
+    update(u: ViewUpdate) {
+      if (!u.selectionSet && !u.docChanged) return;
+      const head = u.state.selection.main.head;
+      const block = u.view.lineBlockAt(head);
+      const dom = u.view.scrollDOM;
+      const desired = block.top + block.height / 2 - dom.clientHeight / 2;
+      const max = Math.max(0, dom.scrollHeight - dom.clientHeight);
+      const clamped = Math.min(Math.max(desired, 0), max);
+      if (Math.abs(dom.scrollTop - clamped) > 1) {
+        dom.scrollTop = clamped;
+      }
+    }
+  },
+);
+
+export const typewriterCompartment = new Compartment();
+
+export function setTypewriter(view: EditorView, enabled: boolean): void {
+  view.dispatch({
+    effects: typewriterCompartment.reconfigure(enabled ? typewriter : []),
+  });
+}
+
 export function createEditor(
   parent: HTMLElement,
   initial: string,
@@ -76,6 +101,7 @@ export function createEditor(
 ): EditorView {
   const extensions: Extension[] = [
     vimCompartment.of([]),
+    typewriterCompartment.of([]),
     history(),
     keymap.of([...defaultKeymap, ...historyKeymap]),
     markdown({
