@@ -2383,3 +2383,22 @@ Before declaring this plan complete, verify:
 - [ ] CI passes on a push to main
 
 When all items are checked, write a one-paragraph completion summary in this file under a `## Completion summary` section, and we can move on to **Plan 2: App Shell** (vertical tabs, file tree, outline, multi-window, sessions).
+
+---
+
+## Completion summary
+
+Plan 1 shipped on 2026-05-02 across 15 commits on `feat/foundation` (`e5e8014` → `44c58ff`). The repo went from empty to a buildable macOS `Markdusk.app` with: pure-Rust `markdusk-core` (parser + Document with atomic save + Settings), a Tauri 2 shell wiring `open_file`/`save_file` IPC commands, a Svelte 5 + CodeMirror 6 frontend with a custom Live Preview extension that hides markdown markers on inactive lines, the Smoke theme (light + dark, system-aware), auto-save with 800 ms debounce, native macOS menu wired to frontend events, `.md` UTI claim verified via `lsregister`, GitHub Actions CI for fmt/clippy/test/svelte-check/vitest on `macos-14`, and a Sam-the-Switcher persona smoke test (launch + quit). Final test state: **23 Rust tests** (21 core + 2 app) + **10 frontend tests** (4 files) + **2 persona tests** all green; `cargo fmt`, `cargo clippy --workspace -- -D warnings`, and `pnpm exec svelte-check` all clean.
+
+**Three notable in-flight plan corrections** worth carrying into Plan 2:
+1. Rust toolchain bumped from 1.85 → **1.90** because Tauri 2's transitive deps (`plist`, `time`, `serde_with`) require ≥ 1.88. Captured in `rust-toolchain.toml`.
+2. Tauri 2.11's `tauri.conf.json` schema places `fileAssociations` at **`bundle.fileAssociations`** (not `bundle.macOS.fileAssociations`) and uses **`ext`** (singular, not `extensions` plural). The plan was wrong; the implementation is correct.
+3. `tauri-driver` reports "not supported on this platform" on macOS — the persona test uses a `open -a` + `pgrep` + `osascript` smoke harness instead. Real UI assertions will require either upstream tauri-driver macOS support, an XCUITest/AX harness, or an in-app test mode.
+
+**Manual verification still pending** (cannot be automated without UI driver):
+- `pnpm tauri dev` opens the window with the Smoke theme rendered
+- Typing markdown shows/hides marks based on cursor line
+- Native menu items (File/Edit/View/Window) appear in the macOS menu bar
+- ⌘S triggers immediate save; idle 800 ms triggers auto-save
+
+**Next:** Plan 2 — App Shell (vertical tabs, file tree, outline, multi-window, session restore).
