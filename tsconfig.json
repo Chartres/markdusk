@@ -7,7 +7,9 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "baseUrl": ".",
+    "paths": { "$lib/*": ["src/lib/*"] }
   },
   "include": ["src/**/*"]
 }
