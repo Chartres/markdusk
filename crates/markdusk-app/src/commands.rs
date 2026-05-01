@@ -1,5 +1,19 @@
 use markdusk_core::document::Document;
+use markdusk_core::outline::{OutlineEntry, outline};
+use markdusk_core::workspace::{FileNode, list_workspace};
 use std::path::PathBuf;
+
+#[tauri::command]
+pub async fn list_workspace_cmd(root: String) -> Result<FileNode, String> {
+    list_workspace(std::path::Path::new(&root))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn outline_cmd(source: String) -> Vec<OutlineEntry> {
+    outline(&source)
+}
 
 #[tauri::command]
 pub async fn open_file(path: String) -> Result<Document, String> {

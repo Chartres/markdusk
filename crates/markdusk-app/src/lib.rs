@@ -11,6 +11,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::open_file,
             commands::save_file,
+            commands::list_workspace_cmd,
+            commands::outline_cmd,
         ])
         .setup(|app| {
             menu::install(app.handle())?;
