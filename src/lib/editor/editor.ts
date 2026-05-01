@@ -62,7 +62,7 @@ export function createEditor(
   const extensions: Extension[] = [
     history(),
     keymap.of([...defaultKeymap, ...historyKeymap]),
-    markdown(),
+    markdown({ extensions: [{ remove: ["SetextHeading"] }] }),
     syntaxHighlighting(markduskHighlight),
     markduskTheme,
     livePreview(),
