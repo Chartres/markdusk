@@ -1,8 +1,6 @@
 [workspace]
 resolver = "2"
-# Note: `crates/markdusk-app` will be added as a member in Task 5 when that
-# crate is created. Including it now would break `cargo check`.
-members = ["crates/markdusk-core"]
+members = ["crates/markdusk-app", "crates/markdusk-core"]
 
 [workspace.package]
 version = "0.1.0"
