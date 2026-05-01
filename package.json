@@ -8,7 +8,8 @@
     "build": "vite build",
     "tauri": "tauri",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:persona": "vitest run --config vitest.persona.config.ts"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^4",

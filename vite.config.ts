@@ -12,5 +12,9 @@ export default defineConfig({
   clearScreen: false,
   server: { port: 1420, strictPort: true },
   build: { target: "es2022" },
-  test: { environment: "jsdom", globals: true },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    exclude: ["tests/persona/**", "node_modules/**", "dist/**"],
+  },
 });
