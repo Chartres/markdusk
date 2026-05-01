@@ -46,3 +46,20 @@ body {
   font-size: 16px;
   line-height: 1.65;
 }
+
+.cm-md-math-block, .cm-md-mermaid {
+  display: block;
+  text-align: center;
+  margin: 12px 0;
+  padding: 12px;
+  background: rgba(0,0,0,0.03);
+  border-radius: 6px;
+}
+:root[data-appearance="dark"] .cm-md-math-block,
+:root[data-appearance="dark"] .cm-md-mermaid {
+  background: rgba(255,255,255,0.04);
+}
+.cm-md-math-error, .cm-md-mermaid-error {
+  color: #c44;
+  background: rgba(196,68,68,0.06);
+}

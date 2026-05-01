@@ -8,6 +8,7 @@ import { GFM } from "@lezer/markdown";
 import { codeLanguages } from "./code-langs";
 import { livePreview } from "./live-preview";
 import { katexDecorations } from "./katex-deco";
+import { mermaidDecorations } from "./mermaid-deco";
 
 export type ChangeHandler = (newContents: string) => void;
 
@@ -74,6 +75,7 @@ export function createEditor(
     markduskTheme,
     livePreview(),
     katexDecorations(),
+    mermaidDecorations(),
     EditorView.updateListener.of((v) => {
       if (v.docChanged && onChange) onChange(v.state.doc.toString());
     }),
