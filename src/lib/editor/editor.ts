@@ -2,6 +2,7 @@ import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
+import { livePreview } from "./live-preview";
 
 export type ChangeHandler = (newContents: string) => void;
 
@@ -14,6 +15,7 @@ export function createEditor(
     history(),
     keymap.of([...defaultKeymap, ...historyKeymap]),
     markdown(),
+    livePreview(),
     EditorView.updateListener.of((v) => {
       if (v.docChanged && onChange) onChange(v.state.doc.toString());
     }),
