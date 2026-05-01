@@ -13,6 +13,7 @@ pub fn run() {
             commands::save_file,
             commands::list_workspace_cmd,
             commands::outline_cmd,
+            commands::save_pasted_image,
         ])
         .setup(|app| {
             menu::install(app.handle())?;

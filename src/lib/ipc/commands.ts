@@ -16,3 +16,11 @@ export async function listWorkspace(root: string): Promise<FileNode> {
 export async function outlineFor(source: string): Promise<OutlineEntry[]> {
   return await invoke<OutlineEntry[]>("outline_cmd", { source });
 }
+
+export async function savePastedImage(
+  docPath: string | null,
+  base64Data: string,
+  extension: string,
+): Promise<string> {
+  return await invoke<string>("save_pasted_image", { docPath, base64Data, extension });
+}

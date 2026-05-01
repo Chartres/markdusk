@@ -9,6 +9,7 @@ import { codeLanguages } from "./code-langs";
 import { livePreview } from "./live-preview";
 import { katexDecorations } from "./katex-deco";
 import { mermaidDecorations } from "./mermaid-deco";
+import { imagePaste } from "./image-paste";
 
 export type ChangeHandler = (newContents: string) => void;
 
@@ -62,6 +63,7 @@ export function createEditor(
   parent: HTMLElement,
   initial: string,
   onChange?: ChangeHandler,
+  getActiveDocPath?: () => string | null,
 ): EditorView {
   const extensions: Extension[] = [
     history(),
@@ -76,6 +78,7 @@ export function createEditor(
     livePreview(),
     katexDecorations(),
     mermaidDecorations(),
+    imagePaste({ getActiveDocPath: getActiveDocPath ?? (() => null) }),
     EditorView.updateListener.of((v) => {
       if (v.docChanged && onChange) onChange(v.state.doc.toString());
     }),

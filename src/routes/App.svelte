@@ -76,7 +76,12 @@
   }
 
   onMount(() => {
-    view = createEditor(container, tabs.active.contents, (next) => tabs.update(next));
+    view = createEditor(
+      container,
+      tabs.active.contents,
+      (next) => tabs.update(next),
+      () => tabs.active.path,
+    );
 
     const unlistenOpen = listen<string[]>("markdusk://open-files", (e) => {
       if (e.payload?.[0]) void loadPath(e.payload[0]);
