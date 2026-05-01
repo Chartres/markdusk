@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applyAppearance } from "./theme";
+import { applyAppearance, applyTheme } from "./theme";
 
 describe("applyAppearance", () => {
   it("sets data-appearance to 'light' when explicitly light", () => {
@@ -17,5 +17,14 @@ describe("applyAppearance", () => {
     document.documentElement.setAttribute("data-appearance", "dark");
     applyAppearance("system");
     expect(document.documentElement.hasAttribute("data-appearance")).toBe(false);
+  });
+});
+
+describe("applyTheme", () => {
+  it("sets data-theme when applyTheme is called", () => {
+    applyTheme("amber");
+    expect(document.documentElement.getAttribute("data-theme")).toBe("amber");
+    applyTheme("smoke");
+    expect(document.documentElement.getAttribute("data-theme")).toBe("smoke");
   });
 });

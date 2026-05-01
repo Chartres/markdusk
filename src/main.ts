@@ -1,7 +1,8 @@
 import { mount } from "svelte";
 import App from "./routes/App.svelte";
-import { applyAppearance } from "$lib/theme/theme";
+import { applyAppearance, applyTheme } from "$lib/theme/theme";
 
+applyTheme("smoke");
 applyAppearance("system");
 
 const target = document.getElementById("app");
