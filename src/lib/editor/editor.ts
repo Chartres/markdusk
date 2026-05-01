@@ -25,6 +25,7 @@ const markduskHighlight = HighlightStyle.define([
   { tag: t.list, color: "var(--md-ink)" },
   { tag: t.processingInstruction, color: "var(--md-muted)" },
   { tag: t.attributeName, color: "var(--md-accent)", fontSize: "0.8em", verticalAlign: "super" },
+  { tag: t.meta, color: "var(--md-muted)", fontFamily: '"JetBrains Mono", ui-monospace, monospace' },
 ]);
 
 const markduskTheme = EditorView.theme({
