@@ -14,6 +14,8 @@ pub fn run() {
             commands::list_workspace_cmd,
             commands::outline_cmd,
             commands::save_pasted_image,
+            commands::export_html,
+            commands::render_html_for_clipboard,
         ])
         .setup(|app| {
             menu::install(app.handle())?;

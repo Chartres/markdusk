@@ -1,8 +1,29 @@
 use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
 use markdusk_core::document::Document;
+use markdusk_core::export::{HtmlTheme, render_html};
 use markdusk_core::outline::{OutlineEntry, outline};
 use markdusk_core::workspace::{FileNode, list_workspace};
 use std::path::PathBuf;
+
+fn parse_theme(theme: &str) -> HtmlTheme {
+    match theme {
+        "amber" => HtmlTheme::Amber,
+        _ => HtmlTheme::Smoke,
+    }
+}
+
+#[tauri::command]
+pub async fn export_html(target_path: String, source: String, theme: String) -> Result<(), String> {
+    let html = render_html(&source, parse_theme(&theme));
+    tokio::fs::write(target_path, html.as_bytes())
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn render_html_for_clipboard(source: String, theme: String) -> String {
+    render_html(&source, parse_theme(&theme))
+}
 
 #[tauri::command]
 pub async fn list_workspace_cmd(root: String) -> Result<FileNode, String> {
@@ -94,6 +115,21 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(doc.contents, "saved");
+    }
+
+    #[tokio::test]
+    async fn export_html_writes_file() {
+        let tmp = TempDir::new().unwrap();
+        let p = tmp.path().join("out.html");
+        export_html(
+            p.to_string_lossy().into_owned(),
+            "# x".into(),
+            "smoke".into(),
+        )
+        .await
+        .unwrap();
+        let read = tokio::fs::read_to_string(&p).await.unwrap();
+        assert!(read.contains("<h1>x</h1>"));
     }
 
     #[tokio::test]
