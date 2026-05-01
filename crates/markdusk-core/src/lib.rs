@@ -4,6 +4,7 @@
 //! so it can be tested headlessly.
 
 pub mod document;
+pub mod export;
 pub mod outline;
 pub mod parser;
 pub mod settings;
