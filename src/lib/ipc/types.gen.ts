@@ -2,4 +2,6 @@
 
 export type Block = { kind: string, text: string, byte_range: [number, number], };
 
+export type Document = { path: string | null, contents: string, dirty: boolean, };
+
 export type ParsedDoc = { blocks: Array<Block>, };

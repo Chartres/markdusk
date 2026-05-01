@@ -10,6 +10,9 @@ serde_json.workspace = true
 pulldown-cmark.workspace = true
 ts-rs.workspace = true
 thiserror.workspace = true
+tokio = { workspace = true }
 
 [dev-dependencies]
 proptest = "1"
+tempfile = "3"
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "fs"] }
