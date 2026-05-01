@@ -98,6 +98,18 @@ export function openFind(view: EditorView): void {
   openSearchPanel(view);
 }
 
+export const spellCheckCompartment = new Compartment();
+
+export function setSpellCheck(view: EditorView, enabled: boolean): void {
+  view.dispatch({
+    effects: spellCheckCompartment.reconfigure(
+      enabled
+        ? EditorView.contentAttributes.of({ spellcheck: "true", autocorrect: "on" })
+        : EditorView.contentAttributes.of({ spellcheck: "false" }),
+    ),
+  });
+}
+
 export function createEditor(
   parent: HTMLElement,
   initial: string,
@@ -107,6 +119,9 @@ export function createEditor(
   const extensions: Extension[] = [
     vimCompartment.of([]),
     typewriterCompartment.of([]),
+    spellCheckCompartment.of(
+      EditorView.contentAttributes.of({ spellcheck: "true", autocorrect: "on" }),
+    ),
     history(),
     search({ top: true }),
     keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
