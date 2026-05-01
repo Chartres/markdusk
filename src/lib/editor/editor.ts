@@ -5,6 +5,7 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
 import { GFM } from "@lezer/markdown";
+import { codeLanguages } from "./code-langs";
 import { livePreview } from "./live-preview";
 
 export type ChangeHandler = (newContents: string) => void;
@@ -63,6 +64,7 @@ export function createEditor(
     keymap.of([...defaultKeymap, ...historyKeymap]),
     markdown({
       base: markdownLanguage,
+      codeLanguages,
       extensions: [GFM, { remove: ["SetextHeading"] }],
     }),
     syntaxHighlighting(markduskHighlight),
