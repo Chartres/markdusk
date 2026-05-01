@@ -1,9 +1,10 @@
 import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import { markdown } from "@codemirror/lang-markdown";
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
+import { GFM } from "@lezer/markdown";
 import { livePreview } from "./live-preview";
 
 export type ChangeHandler = (newContents: string) => void;
@@ -21,6 +22,7 @@ const markduskHighlight = HighlightStyle.define([
   { tag: t.monospace, fontFamily: '"JetBrains Mono", ui-monospace, monospace', color: "var(--md-code-fg)", background: "var(--md-code-bg)", padding: "1px 4px", borderRadius: "3px" },
   { tag: t.quote, color: "var(--md-quote)", fontStyle: "italic" },
   { tag: t.list, color: "var(--md-ink)" },
+  { tag: t.processingInstruction, color: "var(--md-muted)" },
 ]);
 
 const markduskTheme = EditorView.theme({
@@ -59,7 +61,10 @@ export function createEditor(
   const extensions: Extension[] = [
     history(),
     keymap.of([...defaultKeymap, ...historyKeymap]),
-    markdown({ extensions: [{ remove: ["SetextHeading"] }] }),
+    markdown({
+      base: markdownLanguage,
+      extensions: [GFM, { remove: ["SetextHeading"] }],
+    }),
     syntaxHighlighting(markduskHighlight),
     markduskTheme,
     livePreview(),

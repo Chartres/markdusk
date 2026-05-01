@@ -47,4 +47,15 @@ describe("createEditor", () => {
     });
     expect(found).toContain("ATXHeading1");
   });
+
+  it("parses GFM tables", () => {
+    const view = createEditor(parent, "| a | b |\n|---|---|\n| 1 | 2 |");
+    const found: string[] = [];
+    syntaxTree(view.state).iterate({
+      enter: (node) => {
+        found.push(node.name);
+      },
+    });
+    expect(found).toContain("Table");
+  });
 });
