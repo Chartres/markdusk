@@ -39,6 +39,13 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .item(&PredefinedMenuItem::close_window(app, None)?)
         .build()?;
 
+    let find_item = MenuItemBuilder::with_id("edit:find", "Find…")
+        .accelerator("CmdOrCtrl+F")
+        .build(app)?;
+    let replace_item = MenuItemBuilder::with_id("edit:replace", "Find & Replace…")
+        .accelerator("CmdOrCtrl+Alt+F")
+        .build(app)?;
+
     let edit_submenu = SubmenuBuilder::new(app, "Edit")
         .undo()
         .redo()
@@ -47,6 +54,9 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .copy()
         .paste()
         .select_all()
+        .separator()
+        .item(&find_item)
+        .item(&replace_item)
         .build()?;
 
     let theme_smoke = MenuItemBuilder::with_id("theme:smoke", "Smoke").build(app)?;

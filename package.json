@@ -36,6 +36,7 @@
     "@codemirror/lang-python": "^6.2.1",
     "@codemirror/lang-rust": "^6.0.2",
     "@codemirror/language": "^6",
+    "@codemirror/search": "^6.7.0",
     "@codemirror/state": "^6",
     "@codemirror/view": "^6",
     "@lezer/highlight": "^1.2.3",

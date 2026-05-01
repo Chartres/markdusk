@@ -6,6 +6,7 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
 import { GFM } from "@lezer/markdown";
 import { vim } from "@replit/codemirror-vim";
+import { openSearchPanel, search, searchKeymap } from "@codemirror/search";
 import { codeLanguages } from "./code-langs";
 import { livePreview } from "./live-preview";
 import { katexDecorations } from "./katex-deco";
@@ -93,6 +94,10 @@ export function setTypewriter(view: EditorView, enabled: boolean): void {
   });
 }
 
+export function openFind(view: EditorView): void {
+  openSearchPanel(view);
+}
+
 export function createEditor(
   parent: HTMLElement,
   initial: string,
@@ -103,7 +108,8 @@ export function createEditor(
     vimCompartment.of([]),
     typewriterCompartment.of([]),
     history(),
-    keymap.of([...defaultKeymap, ...historyKeymap]),
+    search({ top: true }),
+    keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
     markdown({
       base: markdownLanguage,
       codeLanguages,

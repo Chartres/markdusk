@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
-  import { createEditor, setVim, setTypewriter } from "$lib/editor/editor";
+  import { createEditor, setVim, setTypewriter, openFind } from "$lib/editor/editor";
   import { openFile, saveFile } from "$lib/ipc/commands";
   import { createTabsStore } from "$lib/stores/tabs.svelte";
   import { createWorkspaceStore } from "$lib/stores/workspace.svelte";
@@ -150,6 +150,12 @@
             vimOn = true;
             if (view) setVim(view, true);
           }
+          break;
+        case "edit:find":
+          if (view) openFind(view);
+          break;
+        case "edit:replace":
+          if (view) openFind(view);
           break;
       }
     });
