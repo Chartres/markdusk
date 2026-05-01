@@ -6,6 +6,8 @@ export type Block = { kind: string, text: string, byte_range: [number, number], 
 
 export type Document = { path: string | null, contents: string, dirty: boolean, };
 
+export type FileNode = { name: string, path: string, is_dir: boolean, children: Array<FileNode>, };
+
 export type OutlineEntry = { level: number, text: string, byte_offset: number, };
 
 export type ParsedDoc = { blocks: Array<Block>, };

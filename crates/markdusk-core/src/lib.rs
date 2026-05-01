@@ -8,3 +8,4 @@ pub mod outline;
 pub mod parser;
 pub mod settings;
 pub mod types;
+pub mod workspace;
