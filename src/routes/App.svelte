@@ -100,6 +100,9 @@
           tabs.openNew();
           syncEditor("");
           break;
+        case "file:open-folder":
+          await openFolderDialog();
+          break;
         case "view:toggle-left":
           leftOpen = !leftOpen;
           break;

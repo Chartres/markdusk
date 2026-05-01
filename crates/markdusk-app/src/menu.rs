@@ -22,6 +22,9 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     let open_doc = MenuItemBuilder::with_id("file:open", "Open…")
         .accelerator("CmdOrCtrl+O")
         .build(app)?;
+    let open_folder = MenuItemBuilder::with_id("file:open-folder", "Open Folder…")
+        .accelerator("CmdOrCtrl+Shift+O")
+        .build(app)?;
     let save_doc = MenuItemBuilder::with_id("file:save", "Save")
         .accelerator("CmdOrCtrl+S")
         .build(app)?;
@@ -29,6 +32,7 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     let file_submenu = SubmenuBuilder::new(app, "File")
         .item(&new_doc)
         .item(&open_doc)
+        .item(&open_folder)
         .separator()
         .item(&save_doc)
         .separator()
