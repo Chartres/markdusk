@@ -7,6 +7,7 @@ import { tags as t } from "@lezer/highlight";
 import { GFM } from "@lezer/markdown";
 import { codeLanguages } from "./code-langs";
 import { livePreview } from "./live-preview";
+import { katexDecorations } from "./katex-deco";
 
 export type ChangeHandler = (newContents: string) => void;
 
@@ -72,6 +73,7 @@ export function createEditor(
     syntaxHighlighting(markduskHighlight),
     markduskTheme,
     livePreview(),
+    katexDecorations(),
     EditorView.updateListener.of((v) => {
       if (v.docChanged && onChange) onChange(v.state.doc.toString());
     }),

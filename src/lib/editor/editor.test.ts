@@ -58,4 +58,14 @@ describe("createEditor", () => {
     });
     expect(found).toContain("Table");
   });
+
+  it("does not leave $...$ visible on an inactive math line", () => {
+    // Cursor on line 2; line 1 has inline math $E=mc^2$ — math should be replaced.
+    const view = createEditor(parent, "$E=mc^2$\nbody");
+    view.dispatch({ selection: { anchor: view.state.doc.length } }); // move cursor to end
+    // After dispatch, the math line is inactive. Querying .cm-line[0]'s rendered text:
+    const lines = view.dom.querySelectorAll(".cm-line");
+    // First line should not include the literal '$' chars (they're replaced by the widget)
+    expect(lines[0]?.textContent ?? "").not.toContain("$");
+  });
 });

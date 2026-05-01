@@ -1,3 +1,4 @@
+import "katex/dist/katex.min.css";
 import "./smoke.css";
 
 export type Appearance = "system" | "light" | "dark";
