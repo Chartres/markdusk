@@ -24,3 +24,18 @@ export async function savePastedImage(
 ): Promise<string> {
   return await invoke<string>("save_pasted_image", { docPath, base64Data, extension });
 }
+
+export async function exportHtml(
+  targetPath: string,
+  source: string,
+  theme: "smoke" | "amber",
+): Promise<void> {
+  await invoke<void>("export_html", { targetPath, source, theme });
+}
+
+export async function renderHtmlForClipboard(
+  source: string,
+  theme: "smoke" | "amber",
+): Promise<string> {
+  return await invoke<string>("render_html_for_clipboard", { source, theme });
+}

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
   import { createEditor, setVim, setTypewriter, openFind } from "$lib/editor/editor";
-  import { openFile, saveFile } from "$lib/ipc/commands";
+  import { openFile, saveFile, exportHtml, renderHtmlForClipboard } from "$lib/ipc/commands";
   import { createTabsStore } from "$lib/stores/tabs.svelte";
   import { createWorkspaceStore } from "$lib/stores/workspace.svelte";
   import { createOutlineStore } from "$lib/stores/outline.svelte";
@@ -22,6 +22,7 @@
   let rightOpen = $state(false);
   let focusMode = $state(false);
   let vimOn = $state(false);
+  let currentTheme = $state<"smoke" | "amber">("smoke");
 
   let view: EditorView | undefined;
   let lastTabId: string | undefined;
@@ -126,10 +127,55 @@
           break;
         case "theme:smoke":
           applyTheme("smoke");
+          currentTheme = "smoke";
           break;
         case "theme:amber":
           applyTheme("amber");
+          currentTheme = "amber";
           break;
+        case "export:html": {
+          const { save } = await import("@tauri-apps/plugin-dialog");
+          const target = await save({
+            defaultPath: "export.html",
+            filters: [{ name: "HTML", extensions: ["html"] }],
+          });
+          if (typeof target === "string") {
+            await exportHtml(target, tabs.active.contents, currentTheme);
+          }
+          break;
+        }
+        case "export:pdf": {
+          const html = await renderHtmlForClipboard(tabs.active.contents, currentTheme);
+          const w = window.open("", "_blank");
+          if (w) {
+            w.document.open();
+            w.document.write(html);
+            w.document.close();
+            w.print();
+          } else {
+            // Tauri's WebView blocked window.open; fall back to writing the
+            // HTML to a temp file so the user can print from a browser.
+            const path = await import("@tauri-apps/api/path");
+            const dir = await path.tempDir();
+            const target = `${dir}markdusk-print-${Date.now()}.html`;
+            await exportHtml(target, tabs.active.contents, currentTheme);
+            console.warn(
+              "[markdusk] window.open blocked; wrote print HTML to:",
+              target,
+              "Open the file and print from your browser.",
+            );
+          }
+          break;
+        }
+        case "export:copy-rich": {
+          const html = await renderHtmlForClipboard(tabs.active.contents, currentTheme);
+          const blob = new Blob([html], { type: "text/html" });
+          const plain = new Blob([tabs.active.contents], { type: "text/plain" });
+          await navigator.clipboard.write([
+            new ClipboardItem({ "text/html": blob, "text/plain": plain }),
+          ]);
+          break;
+        }
         case "appearance:system":
           applyAppearance("system");
           break;

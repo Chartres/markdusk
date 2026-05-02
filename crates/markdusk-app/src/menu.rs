@@ -29,12 +29,24 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .accelerator("CmdOrCtrl+S")
         .build(app)?;
 
+    let export_html_item = MenuItemBuilder::with_id("export:html", "Export as HTML…").build(app)?;
+    let export_pdf_item = MenuItemBuilder::with_id("export:pdf", "Export as PDF…").build(app)?;
+    let export_copy_rich_item = MenuItemBuilder::with_id("export:copy-rich", "Copy as Rich Text")
+        .accelerator("CmdOrCtrl+Shift+C")
+        .build(app)?;
+    let export_submenu = SubmenuBuilder::new(app, "Export")
+        .item(&export_html_item)
+        .item(&export_pdf_item)
+        .item(&export_copy_rich_item)
+        .build()?;
+
     let file_submenu = SubmenuBuilder::new(app, "File")
         .item(&new_doc)
         .item(&open_doc)
         .item(&open_folder)
         .separator()
         .item(&save_doc)
+        .item(&export_submenu)
         .separator()
         .item(&PredefinedMenuItem::close_window(app, None)?)
         .build()?;
