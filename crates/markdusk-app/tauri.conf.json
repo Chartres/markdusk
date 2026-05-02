@@ -42,5 +42,13 @@
       "signingIdentity": "-",
       "providerShortName": null
     }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": ["https://markdusk.app/updates/{{target}}/{{arch}}/{{current_version}}"],
+      "dialog": true,
+      "pubkey": "YOUR_TAURI_UPDATER_PUBKEY"
+    }
   }
 }

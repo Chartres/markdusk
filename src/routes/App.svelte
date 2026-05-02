@@ -91,6 +91,19 @@
       () => tabs.active.path,
     );
 
+    void (async () => {
+      try {
+        const { check } = await import("@tauri-apps/plugin-updater");
+        const update = await check();
+        if (update?.available) {
+          // The dialog config in tauri.conf.json shows the native dialog; just trigger.
+          await update.downloadAndInstall();
+        }
+      } catch {
+        // Silent — no updater configured, or no network.
+      }
+    })();
+
     const unlistenOpen = listen<string[]>("markdusk://open-files", (e) => {
       if (e.payload?.[0]) void loadPath(e.payload[0]);
     });
