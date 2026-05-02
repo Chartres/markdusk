@@ -1,8 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-QL_DIR="qlextension/MarkduskQL"
+QL_DIR="qlextension"
 HOST_APP=${1:-target/debug/bundle/macos/Markdusk.app}
+TEAM_ID="${MARKDUSK_TEAM_ID:-}"        # e.g. ABCDE12345 once user has Developer Program
+SIGN_IDENTITY="${MARKDUSK_SIGN_IDENTITY:--}"  # default '-' = ad-hoc
+
+if ! command -v xcodegen >/dev/null 2>&1; then
+  echo "xcodegen not found. Install with: brew install xcodegen"
+  exit 1
+fi
 
 if [ ! -d "$HOST_APP" ]; then
   echo "Host bundle not found: $HOST_APP"
@@ -10,35 +17,39 @@ if [ ! -d "$HOST_APP" ]; then
   exit 1
 fi
 
-OUT_APPEX="$HOST_APP/Contents/PlugIns/MarkduskQL.appex"
-TMP=$(mktemp -d)
-APPEX="$TMP/MarkduskQL.appex"
-mkdir -p "$APPEX/Contents/MacOS" "$APPEX/Contents/Resources"
+# Generate Xcode project
+( cd "$QL_DIR" && xcodegen )
 
-cp "$QL_DIR/Info.plist" "$APPEX/Contents/"
-cp -R "$QL_DIR/Resources/" "$APPEX/Contents/Resources/" 2>/dev/null || true
+# Build the extension
+BUILD_DIR=$(mktemp -d)
+xcodebuild \
+  -project "$QL_DIR/MarkduskQL.xcodeproj" \
+  -scheme MarkduskQL \
+  -configuration Release \
+  -derivedDataPath "$BUILD_DIR" \
+  CODE_SIGN_IDENTITY="$SIGN_IDENTITY" \
+  DEVELOPMENT_TEAM="$TEAM_ID" \
+  CODE_SIGN_STYLE=Manual \
+  build
 
-# NOTE: swiftc has no top-level `-bundle` flag; we pass it through to the
-# linker via `-Xlinker -bundle`. The result is a Mach-O bundle (filetype
-# MH_BUNDLE) which is what app-extension binaries are. There is no `_main`
-# symbol — the loader dispatches via NSExtensionMain through the principal
-# class declared in Info.plist (MarkduskQLPreview).
-xcrun swiftc \
-  -target arm64-apple-macos12.0 \
-  -framework AppKit \
-  -framework Quartz \
-  -framework WebKit \
-  -framework Foundation \
-  -Xlinker -bundle \
-  -o "$APPEX/Contents/MacOS/MarkduskQL" \
-  "$QL_DIR/Sources/MarkduskQL/PreviewViewController.swift" \
-  "$QL_DIR/Sources/MarkduskQL/MarkduskQLEntry.swift"
+APPEX_PATH=$(find "$BUILD_DIR" -name "MarkduskQL.appex" -type d | head -n 1)
+if [ -z "$APPEX_PATH" ] || [ ! -d "$APPEX_PATH" ]; then
+  echo "Build did not produce MarkduskQL.appex"
+  exit 1
+fi
 
+# Install into the host bundle
 mkdir -p "$HOST_APP/Contents/PlugIns"
-rm -rf "$OUT_APPEX"
-mv "$APPEX" "$OUT_APPEX"
-echo "Installed at $OUT_APPEX"
+DEST="$HOST_APP/Contents/PlugIns/MarkduskQL.appex"
+rm -rf "$DEST"
+cp -R "$APPEX_PATH" "$DEST"
+echo "Installed: $DEST"
 
+# Re-register the host with Launch Services so the extension is discovered
 LSREG=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
 "$LSREG" -f "$HOST_APP" || true
 echo "Registered with Launch Services."
+
+# Show what pluginkit sees
+pluginkit -m -p com.apple.quicklook.preview | grep -i markdusk || \
+  echo "(pluginkit doesn't list MarkduskQL yet — may need a logout/login or run 'pluginkit -a $DEST -e use')"

@@ -1,0 +1,31 @@
+name: MarkduskQL
+options:
+  bundleIdPrefix: app.markdusk
+  deploymentTarget:
+    macOS: "12.0"
+  groupSortPosition: top
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: 5.9
+    MACOSX_DEPLOYMENT_TARGET: "12.0"
+    PRODUCT_BUNDLE_IDENTIFIER: app.markdusk.QuickLook
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+targets:
+  MarkduskQL:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: MarkduskQL/Sources
+      - path: MarkduskQL/Resources
+        type: folder
+    settings:
+      base:
+        INFOPLIST_FILE: MarkduskQL/Info.plist
+        ENABLE_HARDENED_RUNTIME: YES
+        SWIFT_OBJC_BRIDGING_HEADER: ""
+        SKIP_INSTALL: NO
