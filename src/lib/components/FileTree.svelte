@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { FileNode } from "$lib/ipc/types.gen";
+  import FileTree from "./FileTree.svelte";
 
   interface Props {
     node: FileNode;
@@ -8,6 +9,9 @@
   }
 
   let { node, onOpen, depth = 0 }: Props = $props();
+  // svelte-ignore state_referenced_locally
+  // Default-expand the top two levels. The initial-value capture is intentional —
+  // expanding/collapsing should not reset when the parent re-renders.
   let expanded = $state(depth < 2);
 </script>
 
@@ -22,7 +26,7 @@
   </button>
   {#if expanded}
     {#each node.children as child (child.path)}
-      <svelte:self node={child} {onOpen} depth={depth + 1} />
+      <FileTree node={child} {onOpen} depth={depth + 1} />
     {/each}
   {/if}
 {:else}
