@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/markdusk-app", "crates/markdusk-core"]
+members = ["crates/markdusk-app", "crates/markdusk-bench", "crates/markdusk-core"]
 
 [workspace.package]
 version = "0.1.0"

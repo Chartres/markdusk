@@ -1,0 +1,30 @@
+[package]
+name = "markdusk-bench"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+markdusk-core = { path = "../markdusk-core" }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "fs"] }
+tempfile = "3"
+
+[[bench]]
+name = "parser"
+harness = false
+
+[[bench]]
+name = "render"
+harness = false
+
+[[bench]]
+name = "outline"
+harness = false
+
+[[bench]]
+name = "document"
+harness = false
