@@ -37,6 +37,12 @@ const markduskTheme = EditorView.theme({
   "&": {
     backgroundColor: "transparent",
     color: "var(--md-ink)",
+    height: "100%",
+  },
+  ".cm-scroller": {
+    // Center the writing column. .cm-content's flex layout makes margin: auto
+    // unreliable, so we apply max-width + auto margins on the scroller itself.
+    justifyContent: "center",
   },
   ".cm-content": {
     fontFamily: 'ui-serif, Charter, "Iowan Old Style", Georgia, serif',
@@ -45,7 +51,10 @@ const markduskTheme = EditorView.theme({
     caretColor: "var(--md-accent)",
     padding: "32px 12px",
     maxWidth: "720px",
-    margin: "0 auto",
+    width: "100%",
+    flexGrow: "0",
+    flexShrink: "0",
+    flexBasis: "720px",
   },
   ".cm-line": {
     padding: "2px 0",
@@ -125,6 +134,7 @@ export function createEditor(
     history(),
     search({ top: true }),
     keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
+    EditorView.lineWrapping,
     markdown({
       base: markdownLanguage,
       codeLanguages,
