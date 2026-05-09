@@ -25,11 +25,15 @@
   let currentTheme = $state<"smoke" | "amber">("smoke");
 
   let view: EditorView | undefined;
-  let lastTabId: string | undefined;
 
   async function loadPath(path: string) {
-    const doc = await openFile(path);
-    tabs.loadFile(path, doc.contents);
+    try {
+      const doc = await openFile(path);
+      tabs.loadFile(path, doc.contents);
+    } catch (e) {
+      console.error("loadPath failed:", path, e);
+      alert(`Couldn't open ${path}\n\n${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   async function openFolderDialog() {
@@ -55,12 +59,21 @@
 
   let activeWordCount = $derived(wordCountOf(tabs.active.contents));
 
+  // Sync the editor surface whenever the active tab OR its contents change.
+  // Tracking both means file loads (contents change for current tab) and tab
+  // switches (activeId change) both reach the editor. The doc-equality guard
+  // prevents loops when the user is the source of the change.
   $effect(() => {
+    // explicit reactive reads — both must be tracked
     const id = tabs.activeId;
-    if (id === lastTabId) return;
-    lastTabId = id;
+    const text = tabs.active.contents;
+    void id;
+    if (!view) return;
+    if (view.state.doc.toString() === text) return;
     untrack(() => {
-      syncEditor(tabs.active.contents);
+      view!.dispatch({
+        changes: { from: 0, to: view!.state.doc.length, insert: text },
+      });
     });
   });
 
