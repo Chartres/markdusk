@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onMount, untrack } from "svelte";
+  import { onMount } from "svelte";
+  import { invoke } from "@tauri-apps/api/core";
   import { createEditor, setVim, setTypewriter, openFind } from "$lib/editor/editor";
   import { openFile, saveFile, exportHtml, renderHtmlForClipboard } from "$lib/ipc/commands";
   import { createTabsStore } from "$lib/stores/tabs.svelte";
@@ -30,10 +31,21 @@
     try {
       const doc = await openFile(path);
       tabs.loadFile(path, doc.contents);
+      syncEditor(doc.contents);
     } catch (e) {
       console.error("loadPath failed:", path, e);
       alert(`Couldn't open ${path}\n\n${e instanceof Error ? e.message : String(e)}`);
     }
+  }
+
+  function selectTab(id: string) {
+    tabs.setActive(id);
+    syncEditor(tabs.active.contents);
+  }
+
+  function closeTab(id: string) {
+    tabs.close(id);
+    syncEditor(tabs.active.contents);
   }
 
   async function openFolderDialog() {
@@ -58,24 +70,6 @@
   }
 
   let activeWordCount = $derived(wordCountOf(tabs.active.contents));
-
-  // Sync the editor surface whenever the active tab OR its contents change.
-  // Tracking both means file loads (contents change for current tab) and tab
-  // switches (activeId change) both reach the editor. The doc-equality guard
-  // prevents loops when the user is the source of the change.
-  $effect(() => {
-    // explicit reactive reads — both must be tracked
-    const id = tabs.activeId;
-    const text = tabs.active.contents;
-    void id;
-    if (!view) return;
-    if (view.state.doc.toString() === text) return;
-    untrack(() => {
-      view!.dispatch({
-        changes: { from: 0, to: view!.state.doc.length, insert: text },
-      });
-    });
-  });
 
   $effect(() => {
     const text = tabs.active.contents;
@@ -120,6 +114,20 @@
     const unlistenOpen = listen<string[]>("markdusk://open-files", (e) => {
       if (e.payload?.[0]) void loadPath(e.payload[0]);
     });
+
+    // Drain any paths that arrived before this listener registered (cold-launch
+    // via Finder / `open file.md`). Without this, the RunEvent::Opened fires
+    // into a webview that isn't ready yet and the path is lost.
+    void (async () => {
+      try {
+        const pending = await invoke<string[]>("drain_pending_opens");
+        if (pending && pending.length > 0) {
+          await loadPath(pending[0]);
+        }
+      } catch (e) {
+        console.error("drain_pending_opens failed:", e);
+      }
+    })();
 
     const unlistenMenu = listen<string>("markdusk://menu", async (e) => {
       switch (e.payload) {
@@ -251,7 +259,7 @@
         const t = tabs.list[idx];
         if (t) {
           e.preventDefault();
-          tabs.setActive(t.id);
+          selectTab(t.id);
         }
       }
     };
@@ -271,8 +279,8 @@
     <LeftRail
       tabs={tabs.list}
       activeId={tabs.activeId}
-      onSelectTab={(id) => tabs.setActive(id)}
-      onCloseTab={(id) => tabs.close(id)}
+      onSelectTab={selectTab}
+      onCloseTab={closeTab}
       onNewTab={() => {
         tabs.openNew();
         syncEditor("");
