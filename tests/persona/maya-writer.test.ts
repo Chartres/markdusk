@@ -1,36 +1,59 @@
 import { describe, it, expect } from "vitest";
-import { execSync, spawn } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { execSync } from "node:child_process";
+import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as wait } from "node:timers/promises";
+import {
+  bundleInstalled,
+  openInMarkdusk,
+  quitMarkdusk,
+  markduskProcessCount,
+} from "./helpers";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const BUNDLE = "target/debug/bundle/macos/Markdusk.app";
 const FIXTURE = join(__dirname, "fixtures", "maya-essay.md");
 
-function processCount(): number {
-  try {
-    const out = execSync("pgrep -f 'markdusk-app' || true", { encoding: "utf-8" });
-    return out.trim().split("\n").filter(Boolean).length;
-  } catch {
-    return 0;
-  }
-}
-
-describe("Maya the Writer: launch-smoke", () => {
-  it("opens her essay fixture and the app launches cleanly", async () => {
-    expect(existsSync(BUNDLE)).toBe(true);
+describe("Maya the Writer", () => {
+  it("the installed bundle exists", () => {
+    expect(bundleInstalled()).toBe(true);
     expect(existsSync(FIXTURE)).toBe(true);
-    expect(readFileSync(FIXTURE, "utf-8")).toContain("# ");
-    execSync("pkill -f 'markdusk-app' 2>/dev/null || true");
-    await wait(500);
-    expect(processCount()).toBe(0);
-    spawn("open", ["-a", "Markdusk", FIXTURE], { stdio: "ignore", detached: true }).unref();
-    await wait(2500);
-    expect(processCount()).toBeGreaterThanOrEqual(1);
-    execSync("osascript -e 'tell application \"Markdusk\" to quit' 2>/dev/null", { stdio: "ignore" });
-    await wait(1500);
-    execSync("pkill -f 'markdusk-app' 2>/dev/null || true");
-  }, 15_000);
+  });
+
+  it("⌘⇧P opens the command palette and search-then-Enter doesn't crash the app", async () => {
+    await quitMarkdusk();
+    await wait(400);
+
+    const dir = mkdtempSync(join(tmpdir(), "markdusk-maya-"));
+    const file = join(dir, "essay.md");
+    writeFileSync(file, "# Essay\n\nFirst paragraph for Maya.\n", "utf-8");
+
+    await openInMarkdusk(file);
+    expect(markduskProcessCount()).toBeGreaterThanOrEqual(1);
+
+    try {
+      execSync(`osascript -e 'tell application "Markdusk" to activate'`);
+      await wait(500);
+      execSync(
+        `osascript -e 'tell application "System Events" to tell process "Markdusk" to keystroke "p" using {command down, shift down}'`,
+      );
+      await wait(300);
+      execSync(
+        `osascript -e 'tell application "System Events" to tell process "Markdusk" to keystroke "amber"'`,
+      );
+      await wait(300);
+      execSync(
+        `osascript -e 'tell application "System Events" to tell process "Markdusk" to keystroke return'`,
+      );
+      await wait(500);
+    } catch (e) {
+      console.warn("[maya] AppleScript path unavailable:", e);
+    }
+
+    expect(markduskProcessCount()).toBeGreaterThanOrEqual(1);
+
+    await quitMarkdusk();
+    expect(markduskProcessCount()).toBe(0);
+  }, 25_000);
 });

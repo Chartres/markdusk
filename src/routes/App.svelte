@@ -1,15 +1,26 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
-  import { createEditor, setVim, setTypewriter, openFind } from "$lib/editor/editor";
+  import {
+    createEditor,
+    setVim,
+    setTypewriter,
+    setSpellCheck,
+    openFind,
+    openReplace,
+  } from "$lib/editor/editor";
   import { openFile, saveFile, exportHtml, renderHtmlForClipboard } from "$lib/ipc/commands";
   import { createTabsStore } from "$lib/stores/tabs.svelte";
   import { createWorkspaceStore } from "$lib/stores/workspace.svelte";
   import { createOutlineStore } from "$lib/stores/outline.svelte";
+  import { createRecentsStore } from "$lib/stores/recents.svelte";
+  import { loadSession, saveSession } from "$lib/stores/session.svelte";
   import { listen } from "@tauri-apps/api/event";
   import LeftRail from "$lib/components/LeftRail.svelte";
   import OutlinePanel from "$lib/components/OutlinePanel.svelte";
   import StatusBar from "$lib/components/StatusBar.svelte";
+  import CommandPalette from "$lib/components/CommandPalette.svelte";
+  import type { FileNode } from "$lib/ipc/types.gen";
   import { EditorSelection } from "@codemirror/state";
   import type { EditorView } from "@codemirror/view";
   import { applyTheme, applyAppearance } from "$lib/theme/theme";
@@ -18,34 +29,65 @@
   const tabs = createTabsStore({ saver: saveFile });
   const workspace = createWorkspaceStore();
   const outline = createOutlineStore();
+  const recents = createRecentsStore();
 
   let leftOpen = $state(false);
   let rightOpen = $state(false);
   let focusMode = $state(false);
   let vimOn = $state(false);
+  let spellOn = $state(true);
   let currentTheme = $state<"smoke" | "amber">("smoke");
+  let paletteMode = $state<"none" | "commands" | "files">("none");
 
   let view: EditorView | undefined;
+
+  function flattenWorkspace(node: FileNode | null): { path: string; name: string }[] {
+    if (!node) return [];
+    const out: { path: string; name: string }[] = [];
+    function walk(n: FileNode) {
+      if (!n.is_dir) {
+        if (n.name.startsWith(".")) return;
+        if (/\.(md|markdown|mdown|mdwn|mkd)$/i.test(n.name)) {
+          out.push({ path: n.path, name: n.name });
+        }
+      } else {
+        for (const child of n.children) walk(child);
+      }
+    }
+    walk(node);
+    return out;
+  }
+
+  let workspaceFiles = $derived(flattenWorkspace(workspace.root));
 
   async function loadPath(path: string) {
     try {
       const doc = await openFile(path);
       tabs.loadFile(path, doc.contents);
       syncEditor(doc.contents);
+      recents.push(path);
+      persistSession();
     } catch (e) {
       console.error("loadPath failed:", path, e);
       alert(`Couldn't open ${path}\n\n${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
+  function persistSession() {
+    const paths = tabs.list.map((t) => t.path).filter((p): p is string => p !== null);
+    saveSession(paths, tabs.active.path);
+  }
+
   function selectTab(id: string) {
     tabs.setActive(id);
     syncEditor(tabs.active.contents);
+    persistSession();
   }
 
   function closeTab(id: string) {
     tabs.close(id);
     syncEditor(tabs.active.contents);
+    persistSession();
   }
 
   async function openFolderDialog() {
@@ -70,6 +112,8 @@
   }
 
   let activeWordCount = $derived(wordCountOf(tabs.active.contents));
+  let activeCharCount = $derived(tabs.active.contents.length);
+  let activeReadingMin = $derived(Math.max(1, Math.round(activeWordCount / 220)));
 
   $effect(() => {
     const text = tabs.active.contents;
@@ -117,15 +161,38 @@
 
     // Drain any paths that arrived before this listener registered (cold-launch
     // via Finder / `open file.md`). Without this, the RunEvent::Opened fires
-    // into a webview that isn't ready yet and the path is lost.
+    // into a webview that isn't ready yet and the path is lost. If nothing was
+    // queued, restore last session's tabs instead.
     void (async () => {
       try {
         const pending = await invoke<string[]>("drain_pending_opens");
         if (pending && pending.length > 0) {
-          await loadPath(pending[0]);
+          for (const p of pending) await loadPath(p);
+          return;
+        }
+        // No file-association open — restore previous session if any.
+        const session = loadSession();
+        if (session.paths.length > 0) {
+          for (const p of session.paths) {
+            try {
+              const doc = await openFile(p);
+              tabs.loadFile(p, doc.contents);
+            } catch {
+              // File moved/deleted since last session — silently skip.
+            }
+          }
+          if (session.activePath) {
+            const target = tabs.list.find((t) => t.path === session.activePath);
+            if (target) {
+              tabs.setActive(target.id);
+              syncEditor(tabs.active.contents);
+            }
+          } else {
+            syncEditor(tabs.active.contents);
+          }
         }
       } catch (e) {
-        console.error("drain_pending_opens failed:", e);
+        console.error("session restore failed:", e);
       }
     })();
 
@@ -235,7 +302,17 @@
           if (view) openFind(view);
           break;
         case "edit:replace":
-          if (view) openFind(view);
+          if (view) openReplace(view);
+          break;
+        case "edit:spell-check":
+          spellOn = !spellOn;
+          if (view) setSpellCheck(view, spellOn);
+          break;
+        case "palette:commands":
+          paletteMode = "commands";
+          break;
+        case "palette:files":
+          paletteMode = "files";
           break;
       }
     });
@@ -248,6 +325,14 @@
       } else if (e.key === "F" && e.shiftKey) {
         e.preventDefault();
         focusMode = !focusMode;
+      } else if (e.key === "P" && e.shiftKey) {
+        e.preventDefault();
+        paletteMode = "commands";
+      } else if (e.key === "p" && !e.shiftKey) {
+        // Cmd+P → quick switcher (vs Cmd+Shift+P → command palette).
+        // Matches the VS Code convention which Sam and Diego expect.
+        e.preventDefault();
+        paletteMode = "files";
       } else if (e.key === "\\" && e.shiftKey) {
         e.preventDefault();
         rightOpen = !rightOpen;
@@ -272,6 +357,173 @@
       view?.destroy();
     };
   });
+
+  interface PaletteItem {
+    id: string;
+    label: string;
+    hint?: string;
+    keywords?: string[];
+    onRun: () => void | Promise<void>;
+  }
+
+  let commandItems = $derived<PaletteItem[]>([
+    {
+      id: "file:new",
+      label: "File: New",
+      hint: "⌘N",
+      keywords: ["create", "blank"],
+      onRun: () => {
+        tabs.openNew();
+        syncEditor("");
+      },
+    },
+    {
+      id: "file:open",
+      label: "File: Open…",
+      hint: "⌘O",
+      onRun: async () => {
+        const { open } = await import("@tauri-apps/plugin-dialog");
+        const picked = await open({
+          multiple: false,
+          filters: [{ name: "Markdown", extensions: ["md", "markdown"] }],
+        });
+        if (typeof picked === "string") await loadPath(picked);
+      },
+    },
+    {
+      id: "file:open-folder",
+      label: "File: Open Folder…",
+      hint: "⌘⇧O",
+      onRun: openFolderDialog,
+    },
+    {
+      id: "file:save",
+      label: "File: Save",
+      hint: "⌘S",
+      onRun: () => void tabs.saveActiveNow(),
+    },
+    {
+      id: "view:focus",
+      label: focusMode ? "View: Exit Focus Mode" : "View: Focus Mode",
+      hint: "⌘⇧F",
+      onRun: () => {
+        focusMode = !focusMode;
+      },
+    },
+    {
+      id: "view:toggle-left",
+      label: leftOpen ? "View: Hide Files Sidebar" : "View: Show Files Sidebar",
+      hint: "⌘\\",
+      onRun: () => {
+        leftOpen = !leftOpen;
+      },
+    },
+    {
+      id: "view:toggle-right",
+      label: rightOpen ? "View: Hide Outline" : "View: Show Outline",
+      hint: "⌘⇧\\",
+      onRun: () => {
+        rightOpen = !rightOpen;
+      },
+    },
+    {
+      id: "theme:smoke",
+      label: "Theme: Smoke",
+      keywords: ["sage", "dark"],
+      onRun: () => {
+        applyTheme("smoke");
+        currentTheme = "smoke";
+      },
+    },
+    {
+      id: "theme:amber",
+      label: "Theme: Amber",
+      keywords: ["paper", "warm"],
+      onRun: () => {
+        applyTheme("amber");
+        currentTheme = "amber";
+      },
+    },
+    {
+      id: "appearance:system",
+      label: "Appearance: Follow System",
+      onRun: () => applyAppearance("system"),
+    },
+    { id: "appearance:light", label: "Appearance: Light", onRun: () => applyAppearance("light") },
+    { id: "appearance:dark", label: "Appearance: Dark", onRun: () => applyAppearance("dark") },
+    {
+      id: "edit:find",
+      label: "Edit: Find…",
+      hint: "⌘F",
+      onRun: () => view && openFind(view),
+    },
+    {
+      id: "edit:replace",
+      label: "Edit: Find & Replace…",
+      hint: "⌘⌥F",
+      onRun: () => view && openReplace(view),
+    },
+    {
+      id: "edit:spell-check",
+      label: spellOn ? "Edit: Disable Spell Check" : "Edit: Enable Spell Check",
+      onRun: () => {
+        spellOn = !spellOn;
+        if (view) setSpellCheck(view, spellOn);
+      },
+    },
+    {
+      id: "mode:vim",
+      label: vimOn ? "Editor Mode: Default" : "Editor Mode: Vim",
+      onRun: () => {
+        vimOn = !vimOn;
+        if (view) setVim(view, vimOn);
+      },
+    },
+    {
+      id: "export:html",
+      label: "Export: HTML…",
+      onRun: async () => {
+        const { save } = await import("@tauri-apps/plugin-dialog");
+        const target = await save({
+          defaultPath: "export.html",
+          filters: [{ name: "HTML", extensions: ["html"] }],
+        });
+        if (typeof target === "string") {
+          await exportHtml(target, tabs.active.contents, currentTheme);
+        }
+      },
+    },
+    {
+      id: "export:copy-rich",
+      label: "Export: Copy as Rich Text",
+      hint: "⌘⇧C",
+      onRun: async () => {
+        const html = await renderHtmlForClipboard(tabs.active.contents, currentTheme);
+        const blob = new Blob([html], { type: "text/html" });
+        const plain = new Blob([tabs.active.contents], { type: "text/plain" });
+        await navigator.clipboard.write([
+          new ClipboardItem({ "text/html": blob, "text/plain": plain }),
+        ]);
+      },
+    },
+    ...recents.list.map((p) => ({
+      id: `recent:${p}`,
+      label: `Recent: ${p.split("/").pop() ?? p}`,
+      hint: p,
+      keywords: ["open", "recent"],
+      onRun: () => void loadPath(p),
+    })),
+  ]);
+
+  let fileItems = $derived<PaletteItem[]>(
+    workspaceFiles.map((f) => ({
+      id: `file:${f.path}`,
+      label: f.name,
+      hint: f.path,
+      keywords: [f.path],
+      onRun: () => void loadPath(f.path),
+    })),
+  );
 </script>
 
 <div class="layout" class:focus={focusMode} class:left-open={leftOpen} class:right-open={rightOpen}>
@@ -294,7 +546,13 @@
   <main>
     <div bind:this={container} class="editor"></div>
     {#if !focusMode}
-      <StatusBar path={tabs.active.path} dirty={tabs.active.dirty} wordCount={activeWordCount} />
+      <StatusBar
+        path={tabs.active.path}
+        dirty={tabs.active.dirty}
+        wordCount={activeWordCount}
+        charCount={activeCharCount}
+        readingMin={activeReadingMin}
+      />
     {/if}
   </main>
 
@@ -304,6 +562,13 @@
     </aside>
   {/if}
 </div>
+
+<CommandPalette
+  open={paletteMode !== "none"}
+  items={paletteMode === "files" ? fileItems : commandItems}
+  placeholder={paletteMode === "files" ? "Go to file…" : "Type a command…"}
+  onClose={() => (paletteMode = "none")}
+/>
 
 <style>
   .layout {
@@ -332,7 +597,10 @@
   }
   .editor {
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
+    width: 100%;
+    max-width: 720px;
+    align-self: center;
   }
   :global(.cm-editor) {
     height: 100%;

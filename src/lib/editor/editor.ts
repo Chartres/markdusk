@@ -1,12 +1,18 @@
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
 import { EditorView, ViewPlugin, type ViewUpdate, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import {
+  markdown,
+  markdownLanguage,
+  insertNewlineContinueMarkup,
+  deleteMarkupBackward,
+} from "@codemirror/lang-markdown";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
 import { GFM } from "@lezer/markdown";
 import { vim } from "@replit/codemirror-vim";
 import { openSearchPanel, search, searchKeymap } from "@codemirror/search";
+import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { codeLanguages } from "./code-langs";
 import { livePreview } from "./live-preview";
 import { katexDecorations } from "./katex-deco";
@@ -39,22 +45,12 @@ const markduskTheme = EditorView.theme({
     color: "var(--md-ink)",
     height: "100%",
   },
-  ".cm-scroller": {
-    // Center the writing column. .cm-content's flex layout makes margin: auto
-    // unreliable, so we apply max-width + auto margins on the scroller itself.
-    justifyContent: "center",
-  },
   ".cm-content": {
     fontFamily: 'ui-serif, Charter, "Iowan Old Style", Georgia, serif',
     fontSize: "16px",
     lineHeight: "1.65",
     caretColor: "var(--md-accent)",
     padding: "32px 12px",
-    maxWidth: "720px",
-    width: "100%",
-    flexGrow: "0",
-    flexShrink: "0",
-    flexBasis: "720px",
   },
   ".cm-line": {
     padding: "2px 0",
@@ -107,6 +103,18 @@ export function openFind(view: EditorView): void {
   openSearchPanel(view);
 }
 
+export function openReplace(view: EditorView): void {
+  openSearchPanel(view);
+  // The search panel always shows Replace controls; opening it puts focus on
+  // the search field. Move focus to the replace field via a synthetic Tab.
+  queueMicrotask(() => {
+    const dom = view.dom.querySelector<HTMLInputElement>(
+      ".cm-search .cm-textfield[name='replace']",
+    );
+    dom?.focus();
+  });
+}
+
 export const spellCheckCompartment = new Compartment();
 
 export function setSpellCheck(view: EditorView, enabled: boolean): void {
@@ -133,7 +141,18 @@ export function createEditor(
     ),
     history(),
     search({ top: true }),
-    keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
+    closeBrackets(),
+    keymap.of([
+      // Markdown list continuation: Enter inside `- ` or `1. ` continues the
+      // list; on an empty bullet, exits the list.
+      { key: "Enter", run: insertNewlineContinueMarkup },
+      // Backspace inside a markup prefix deletes the prefix cleanly.
+      { key: "Backspace", run: deleteMarkupBackward },
+      ...closeBracketsKeymap,
+      ...defaultKeymap,
+      ...historyKeymap,
+      ...searchKeymap,
+    ]),
     EditorView.lineWrapping,
     markdown({
       base: markdownLanguage,

@@ -58,6 +58,9 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .accelerator("CmdOrCtrl+Alt+F")
         .build(app)?;
 
+    let spell_check_item = MenuItemBuilder::with_id("edit:spell-check", "Toggle Spell Check")
+        .build(app)?;
+
     let edit_submenu = SubmenuBuilder::new(app, "Edit")
         .undo()
         .redo()
@@ -69,6 +72,8 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .separator()
         .item(&find_item)
         .item(&replace_item)
+        .separator()
+        .item(&spell_check_item)
         .build()?;
 
     let theme_smoke = MenuItemBuilder::with_id("theme:smoke", "Smoke").build(app)?;
@@ -95,6 +100,17 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .build()?;
 
     let view_submenu = SubmenuBuilder::new(app, "View")
+        .item(
+            &MenuItemBuilder::with_id("palette:commands", "Command Palette…")
+                .accelerator("CmdOrCtrl+Shift+P")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("palette:files", "Go to File…")
+                .accelerator("CmdOrCtrl+P")
+                .build(app)?,
+        )
+        .separator()
         .item(
             &MenuItemBuilder::with_id("view:toggle-left", "Toggle Files Sidebar")
                 .accelerator("CmdOrCtrl+\\")

@@ -3,15 +3,24 @@
     path: string | null;
     dirty: boolean;
     wordCount: number;
+    charCount: number;
+    readingMin: number;
   }
 
-  let { path, dirty, wordCount }: Props = $props();
-  let readMin = $derived(Math.max(1, Math.round(wordCount / 220)));
+  let { path, dirty, wordCount, charCount, readingMin }: Props = $props();
+  let showChars = $state(false);
 </script>
 
 <footer class="status">
   <span>{dirty ? "● " : ""}{path ?? "Untitled"}</span>
-  <span>{wordCount} words · {readMin} min · ⌘\ files · ⌘⇧\ outline · ⌘⇧F focus</span>
+  <span class="counts" onclick={() => (showChars = !showChars)} role="presentation">
+    {#if showChars}
+      {charCount.toLocaleString()} chars
+    {:else}
+      {wordCount.toLocaleString()} words
+    {/if}
+    · {readingMin} min read · ⌘⇧P palette · ⌘P files · ⌘⇧F focus
+  </span>
 </footer>
 
 <style>
@@ -27,5 +36,12 @@
       BlinkMacSystemFont,
       "Segoe UI",
       sans-serif;
+  }
+  .counts {
+    cursor: pointer;
+    user-select: none;
+  }
+  .counts:hover {
+    color: var(--md-ink);
   }
 </style>
