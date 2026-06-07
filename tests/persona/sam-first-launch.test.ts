@@ -1,46 +1,45 @@
 import { describe, it, expect } from "vitest";
-import { execSync, spawn } from "node:child_process";
-import { existsSync, writeFileSync, mkdtempSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as wait } from "node:timers/promises";
-
-const BUNDLE = "target/debug/bundle/macos/Markdusk.app";
-
-function markduskProcessCount(): number {
-  try {
-    const out = execSync("pgrep -f 'markdusk-app' || true", { encoding: "utf-8" });
-    return out.trim().split("\n").filter(Boolean).length;
-  } catch {
-    return 0;
-  }
-}
+import {
+  BUNDLE,
+  bundleInstalled,
+  markduskProcessCount,
+  openInMarkdusk,
+  quitMarkdusk,
+  readEditorContent,
+} from "./helpers";
 
 describe("Sam the Switcher: first-launch", () => {
-  it("the app bundle exists at the expected path", () => {
-    expect(existsSync(BUNDLE)).toBe(true);
+  it("the installed bundle exists at /Applications/Markdusk.app", () => {
+    expect(bundleInstalled()).toBe(true);
+    expect(BUNDLE).toBe("/Applications/Markdusk.app");
   });
 
-  it("launches and quits cleanly when given a markdown file", async () => {
-    // Ensure no stragglers from a previous run.
-    execSync("pkill -f 'markdusk-app' 2>/dev/null || true");
-    await wait(500);
+  it("opens a markdown file and the editor surface shows its contents (JTBD: 'I double-clicked an .md — show me what's in it')", async () => {
+    await quitMarkdusk();
+    await wait(400);
     expect(markduskProcessCount()).toBe(0);
 
     const dir = mkdtempSync(join(tmpdir(), "markdusk-persona-"));
     const file = join(dir, "hello.md");
-    writeFileSync(file, "# Hello, Sam\n\nthis is markdusk", "utf-8");
+    const sentinel = "# Hello, Sam\n\nthis is markdusk and it must show up";
+    writeFileSync(file, sentinel, "utf-8");
 
-    spawn("open", ["-a", "Markdusk", file], { stdio: "ignore", detached: true }).unref();
-    await wait(2000);
-
+    await openInMarkdusk(file);
     expect(markduskProcessCount()).toBeGreaterThanOrEqual(1);
 
-    execSync("osascript -e 'tell application \"Markdusk\" to quit' 2>/dev/null", { stdio: "ignore" });
-    await wait(1500);
-    execSync("pkill -f 'markdusk-app' 2>/dev/null || true");
-    await wait(500);
+    const editorText = await readEditorContent();
+    if (editorText === null) {
+      console.warn("[sam] skipping content assertion — cliclick or AX perms unavailable");
+    } else {
+      // Trim a trailing newline that copy operations frequently add.
+      expect(editorText.trim()).toBe(sentinel.trim());
+    }
 
+    await quitMarkdusk();
     expect(markduskProcessCount()).toBe(0);
-  }, 15_000);
+  }, 25_000);
 });
