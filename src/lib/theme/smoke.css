@@ -70,3 +70,14 @@ body {
   color: #c44;
   background: rgba(196,68,68,0.06);
 }
+
+/* iA-style Focus Mode dim — content outside the focused paragraph/sentence
+   fades so the writer's eye locks onto what they're editing now.
+   Applied via inline span mark decoration; CodeMirror wraps each line's
+   relevant range with .cm-md-dim. */
+.cm-md-dim,
+.cm-md-dim * {
+  color: var(--md-muted) !important;
+  opacity: 0.55;
+  transition: opacity 140ms ease-out;
+}

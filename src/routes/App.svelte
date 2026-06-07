@@ -6,8 +6,11 @@
     setVim,
     setTypewriter,
     setSpellCheck,
+    setFocusDim,
+    setSmartPunctuation,
     openFind,
     openReplace,
+    type FocusDimMode,
   } from "$lib/editor/editor";
   import { openFile, saveFile, exportHtml, renderHtmlForClipboard } from "$lib/ipc/commands";
   import { createTabsStore } from "$lib/stores/tabs.svelte";
@@ -36,8 +39,10 @@
   let focusMode = $state(false);
   let vimOn = $state(false);
   let spellOn = $state(true);
+  let smartPunct = $state(false);
+  let focusDimMode = $state<FocusDimMode>("paragraph");
   let currentTheme = $state<"smoke" | "amber">("smoke");
-  let paletteMode = $state<"none" | "commands" | "files">("none");
+  let paletteMode = $state<"none" | "commands" | "files" | "headings">("none");
 
   let view: EditorView | undefined;
 
@@ -123,6 +128,12 @@
   $effect(() => {
     const enabled = focusMode;
     if (view) setTypewriter(view, enabled);
+  });
+
+  // When focus mode is on, apply the user's preferred dim mode; off otherwise.
+  $effect(() => {
+    if (!view) return;
+    setFocusDim(view, focusMode ? focusDimMode : "off");
   });
 
   function jumpTo(byteOffset: number) {
@@ -314,6 +325,24 @@
         case "palette:files":
           paletteMode = "files";
           break;
+        case "edit:smart-punct":
+          smartPunct = !smartPunct;
+          if (view) setSmartPunctuation(view, smartPunct);
+          break;
+        case "view:focus-dim:paragraph":
+          focusDimMode = "paragraph";
+          if (!focusMode) focusMode = true;
+          break;
+        case "view:focus-dim:sentence":
+          focusDimMode = "sentence";
+          if (!focusMode) focusMode = true;
+          break;
+        case "view:focus-dim:off":
+          focusDimMode = "off";
+          break;
+        case "view:jump-heading":
+          paletteMode = "headings";
+          break;
       }
     });
 
@@ -333,6 +362,10 @@
         // Matches the VS Code convention which Sam and Diego expect.
         e.preventDefault();
         paletteMode = "files";
+      } else if (e.key === "G" && e.shiftKey) {
+        // Cmd+Shift+G → jump to heading within the current document.
+        e.preventDefault();
+        paletteMode = "headings";
       } else if (e.key === "\\" && e.shiftKey) {
         e.preventDefault();
         rightOpen = !rightOpen;
@@ -411,6 +444,41 @@
       },
     },
     {
+      id: "view:focus-dim:paragraph",
+      label: "View: Focus Dim — Paragraph",
+      keywords: ["focus", "dim"],
+      onRun: () => {
+        focusDimMode = "paragraph";
+        focusMode = true;
+      },
+    },
+    {
+      id: "view:focus-dim:sentence",
+      label: "View: Focus Dim — Sentence",
+      keywords: ["focus", "dim", "ia"],
+      onRun: () => {
+        focusDimMode = "sentence";
+        focusMode = true;
+      },
+    },
+    {
+      id: "view:focus-dim:off",
+      label: "View: Focus Dim — Off",
+      keywords: ["focus", "dim", "disable"],
+      onRun: () => {
+        focusDimMode = "off";
+      },
+    },
+    {
+      id: "view:jump-heading",
+      label: "View: Jump to Heading…",
+      hint: "⌘⇧G",
+      keywords: ["outline", "heading", "navigate"],
+      onRun: () => {
+        paletteMode = "headings";
+      },
+    },
+    {
       id: "view:toggle-left",
       label: leftOpen ? "View: Hide Files Sidebar" : "View: Show Files Sidebar",
       hint: "⌘\\",
@@ -472,6 +540,17 @@
       },
     },
     {
+      id: "edit:smart-punct",
+      label: smartPunct
+        ? "Edit: Disable Smart Punctuation"
+        : "Edit: Enable Smart Punctuation",
+      keywords: ["curly", "quotes", "em", "dash"],
+      onRun: () => {
+        smartPunct = !smartPunct;
+        if (view) setSmartPunctuation(view, smartPunct);
+      },
+    },
+    {
       id: "mode:vim",
       label: vimOn ? "Editor Mode: Default" : "Editor Mode: Vim",
       onRun: () => {
@@ -524,6 +603,16 @@
       onRun: () => void loadPath(f.path),
     })),
   );
+
+  let headingItems = $derived<PaletteItem[]>(
+    outline.entries.map((h, i) => ({
+      id: `heading:${i}:${h.byte_offset}`,
+      label: `${"  ".repeat(Math.max(0, h.level - 1))}${h.text}`,
+      hint: `H${h.level}`,
+      keywords: [h.text],
+      onRun: () => jumpTo(h.byte_offset),
+    })),
+  );
 </script>
 
 <div class="layout" class:focus={focusMode} class:left-open={leftOpen} class:right-open={rightOpen}>
@@ -567,8 +656,16 @@
 
 <CommandPalette
   open={paletteMode !== "none"}
-  items={paletteMode === "files" ? fileItems : commandItems}
-  placeholder={paletteMode === "files" ? "Go to file…" : "Type a command…"}
+  items={paletteMode === "files"
+    ? fileItems
+    : paletteMode === "headings"
+      ? headingItems
+      : commandItems}
+  placeholder={paletteMode === "files"
+    ? "Go to file…"
+    : paletteMode === "headings"
+      ? "Jump to heading…"
+      : "Type a command…"}
   onClose={() => (paletteMode = "none")}
 />
 

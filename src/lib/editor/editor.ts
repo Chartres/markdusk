@@ -18,6 +18,10 @@ import { livePreview } from "./live-preview";
 import { katexDecorations } from "./katex-deco";
 import { mermaidDecorations } from "./mermaid-deco";
 import { imagePaste } from "./image-paste";
+import { focusDim, setFocusDim, type FocusDimMode } from "./focus-dim";
+import { smartPunctuation, setSmartPunctuation } from "./smart-punctuation";
+
+export { setFocusDim, type FocusDimMode, setSmartPunctuation };
 
 export type ChangeHandler = (newContents: string) => void;
 
@@ -162,6 +166,8 @@ export function createEditor(
     syntaxHighlighting(markduskHighlight),
     markduskTheme,
     livePreview(),
+    focusDim("off"),
+    smartPunctuation(false),
     katexDecorations(),
     mermaidDecorations(),
     imagePaste({ getActiveDocPath: getActiveDocPath ?? (() => null) }),
