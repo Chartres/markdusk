@@ -544,7 +544,9 @@
   {/if}
 
   <main>
-    <div bind:this={container} class="editor"></div>
+    <div class="editor-wrap">
+      <div bind:this={container} class="editor"></div>
+    </div>
     {#if !focusMode}
       <StatusBar
         path={tabs.active.path}
@@ -573,15 +575,15 @@
 <style>
   .layout {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 0 1fr 0;
     height: 100vh;
     overflow: hidden;
   }
   .layout.left-open {
-    grid-template-columns: 240px 1fr auto;
+    grid-template-columns: 240px 1fr 0;
   }
   .layout.right-open {
-    grid-template-columns: auto 1fr 240px;
+    grid-template-columns: 0 1fr 240px;
   }
   .layout.left-open.right-open {
     grid-template-columns: 240px 1fr 240px;
@@ -590,22 +592,30 @@
     grid-template-columns: 1fr;
   }
   main {
+    grid-column: 2;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     min-width: 0;
   }
-  .editor {
+  /* editor-wrap stretches across main and centers the editor column. */
+  .editor-wrap {
     flex: 1;
     overflow: hidden;
+    display: flex;
+    justify-content: center;
+    min-height: 0;
+  }
+  .editor {
     width: 100%;
     max-width: 720px;
-    align-self: center;
+    overflow: hidden;
   }
   :global(.cm-editor) {
     height: 100%;
   }
   .right-rail {
+    grid-column: 3;
     border-left: 1px solid var(--md-rule);
     overflow-y: auto;
     background: rgba(0, 0, 0, 0.04);

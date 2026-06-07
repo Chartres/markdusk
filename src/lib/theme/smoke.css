@@ -38,8 +38,15 @@
   --md-active-line: rgba(136,179,164,0.04);
 }
 
-body {
+html, body, #app {
   margin: 0;
+  width: 100%;
+  height: 100%;
+}
+html, body {
+  height: 100vh;
+}
+body {
   background: var(--md-paper);
   color: var(--md-ink);
   font-family: ui-serif, Charter, "Iowan Old Style", Georgia, serif;
