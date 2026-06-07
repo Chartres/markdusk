@@ -1,0 +1,83 @@
+:root {
+  --md-paper: #eee9de;
+  --md-ink: #2a2c2c;
+  --md-accent: #3d6a5e;
+  --md-quote: #5d8a7e;
+  --md-muted: #73716a;
+  --md-rule: #d2cbb8;
+  --md-code-bg: #1d2222;
+  --md-code-fg: #dfd8c6;
+  --md-active-line: rgba(61,106,94,0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --md-paper: #1d2222;
+    --md-ink: #dcd6c4;
+    --md-accent: #88b3a4;
+    --md-quote: #5d8a7e;
+    --md-muted: #888a82;
+    --md-rule: #262b2b;
+    --md-code-bg: #121515;
+    --md-code-fg: #cfc9b8;
+    --md-active-line: rgba(136,179,164,0.04);
+  }
+}
+
+:root[data-appearance="light"] {
+  --md-paper: #eee9de; --md-ink: #2a2c2c; --md-accent: #3d6a5e;
+  --md-quote: #5d8a7e; --md-muted: #73716a; --md-rule: #d2cbb8;
+  --md-code-bg: #1d2222; --md-code-fg: #dfd8c6;
+  --md-active-line: rgba(61,106,94,0.06);
+}
+
+:root[data-appearance="dark"] {
+  --md-paper: #1d2222; --md-ink: #dcd6c4; --md-accent: #88b3a4;
+  --md-quote: #5d8a7e; --md-muted: #888a82; --md-rule: #262b2b;
+  --md-code-bg: #121515; --md-code-fg: #cfc9b8;
+  --md-active-line: rgba(136,179,164,0.04);
+}
+
+html, body, #app {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+html, body {
+  height: 100vh;
+}
+body {
+  background: var(--md-paper);
+  color: var(--md-ink);
+  font-family: ui-serif, Charter, "Iowan Old Style", Georgia, serif;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.cm-md-math-block, .cm-md-mermaid {
+  display: block;
+  text-align: center;
+  margin: 12px 0;
+  padding: 12px;
+  background: rgba(0,0,0,0.03);
+  border-radius: 6px;
+}
+:root[data-appearance="dark"] .cm-md-math-block,
+:root[data-appearance="dark"] .cm-md-mermaid {
+  background: rgba(255,255,255,0.04);
+}
+.cm-md-math-error, .cm-md-mermaid-error {
+  color: #c44;
+  background: rgba(196,68,68,0.06);
+}
+
+/* iA-style Focus Mode dim — content outside the focused paragraph/sentence
+   fades so the writer's eye locks onto what they're editing now.
+   Applied via inline span mark decoration; CodeMirror wraps each line's
+   relevant range with .cm-md-dim. */
+.cm-md-dim,
+.cm-md-dim * {
+  color: var(--md-muted) !important;
+  opacity: 0.55;
+  transition: opacity 140ms ease-out;
+}

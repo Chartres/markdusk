@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Markdusk",
+  "version": "0.1.0",
+  "identifier": "app.markdusk",
+  "build": {
+    "frontendDist": "../../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Markdusk",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 600,
+        "minHeight": 400,
+        "titleBarStyle": "Transparent",
+        "hiddenTitle": true
+      }
+    ],
+    "macOSPrivateApi": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": "app",
+    "icon": ["icons/icon.icns"],
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown", "mdown", "mdwn", "mkd"],
+        "name": "Markdown Document",
+        "role": "Editor",
+        "mimeType": "text/markdown"
+      }
+    ],
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.plist",
+      "signingIdentity": "-",
+      "providerShortName": null
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": ["https://markdusk.app/updates/{{target}}/{{arch}}/{{current_version}}"],
+      "dialog": true,
+      "pubkey": "YOUR_TAURI_UPDATER_PUBKEY"
+    }
+  }
+}

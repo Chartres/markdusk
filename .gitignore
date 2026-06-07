@@ -6,3 +6,7 @@ dist/
 .env*
 src-tauri/target/
 *.log
+# Tauri-generated build artifacts (schemas regen on each build)
+crates/markdusk-app/gen/schemas/
+# xcodegen-generated Xcode project for the Quick Look extension
+qlextension/MarkduskQL.xcodeproj/

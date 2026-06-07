@@ -1,0 +1,189 @@
+use tauri::{
+    AppHandle, Emitter, Manager, Runtime,
+    menu::{Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder},
+};
+
+pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
+    let app_submenu = SubmenuBuilder::new(app, "Markdusk")
+        .about(None)
+        .separator()
+        .item(&PredefinedMenuItem::services(app, None)?)
+        .separator()
+        .item(&PredefinedMenuItem::hide(app, None)?)
+        .item(&PredefinedMenuItem::hide_others(app, None)?)
+        .item(&PredefinedMenuItem::show_all(app, None)?)
+        .separator()
+        .quit()
+        .build()?;
+
+    let new_doc = MenuItemBuilder::with_id("file:new", "New")
+        .accelerator("CmdOrCtrl+N")
+        .build(app)?;
+    let open_doc = MenuItemBuilder::with_id("file:open", "Open…")
+        .accelerator("CmdOrCtrl+O")
+        .build(app)?;
+    let open_folder = MenuItemBuilder::with_id("file:open-folder", "Open Folder…")
+        .accelerator("CmdOrCtrl+Shift+O")
+        .build(app)?;
+    let save_doc = MenuItemBuilder::with_id("file:save", "Save")
+        .accelerator("CmdOrCtrl+S")
+        .build(app)?;
+
+    let export_html_item = MenuItemBuilder::with_id("export:html", "Export as HTML…").build(app)?;
+    let export_pdf_item = MenuItemBuilder::with_id("export:pdf", "Export as PDF…").build(app)?;
+    let export_docx_item = MenuItemBuilder::with_id("export:docx", "Export as DOCX…").build(app)?;
+    let export_copy_rich_item = MenuItemBuilder::with_id("export:copy-rich", "Copy as Rich Text")
+        .accelerator("CmdOrCtrl+Shift+C")
+        .build(app)?;
+    let export_submenu = SubmenuBuilder::new(app, "Export")
+        .item(&export_html_item)
+        .item(&export_pdf_item)
+        .item(&export_docx_item)
+        .item(&export_copy_rich_item)
+        .build()?;
+
+    let file_submenu = SubmenuBuilder::new(app, "File")
+        .item(&new_doc)
+        .item(&open_doc)
+        .item(&open_folder)
+        .separator()
+        .item(&save_doc)
+        .item(&export_submenu)
+        .separator()
+        .item(&PredefinedMenuItem::close_window(app, None)?)
+        .build()?;
+
+    let find_item = MenuItemBuilder::with_id("edit:find", "Find…")
+        .accelerator("CmdOrCtrl+F")
+        .build(app)?;
+    let replace_item = MenuItemBuilder::with_id("edit:replace", "Find & Replace…")
+        .accelerator("CmdOrCtrl+Alt+F")
+        .build(app)?;
+
+    let spell_check_item = MenuItemBuilder::with_id("edit:spell-check", "Toggle Spell Check")
+        .build(app)?;
+    let smart_punct_item = MenuItemBuilder::with_id("edit:smart-punct", "Toggle Smart Punctuation")
+        .build(app)?;
+
+    let edit_submenu = SubmenuBuilder::new(app, "Edit")
+        .undo()
+        .redo()
+        .separator()
+        .cut()
+        .copy()
+        .paste()
+        .select_all()
+        .separator()
+        .item(&find_item)
+        .item(&replace_item)
+        .separator()
+        .item(&spell_check_item)
+        .item(&smart_punct_item)
+        .build()?;
+
+    let theme_smoke = MenuItemBuilder::with_id("theme:smoke", "Smoke").build(app)?;
+    let theme_amber = MenuItemBuilder::with_id("theme:amber", "Amber").build(app)?;
+    let theme_submenu = SubmenuBuilder::new(app, "Theme")
+        .item(&theme_smoke)
+        .item(&theme_amber)
+        .build()?;
+
+    let app_system = MenuItemBuilder::with_id("appearance:system", "System").build(app)?;
+    let app_light = MenuItemBuilder::with_id("appearance:light", "Light").build(app)?;
+    let app_dark = MenuItemBuilder::with_id("appearance:dark", "Dark").build(app)?;
+    let appearance_submenu = SubmenuBuilder::new(app, "Appearance")
+        .item(&app_system)
+        .item(&app_light)
+        .item(&app_dark)
+        .build()?;
+
+    let mode_default = MenuItemBuilder::with_id("mode:default", "Default").build(app)?;
+    let mode_vim = MenuItemBuilder::with_id("mode:vim", "Vim").build(app)?;
+    let mode_submenu = SubmenuBuilder::new(app, "Editor Mode")
+        .item(&mode_default)
+        .item(&mode_vim)
+        .build()?;
+
+    let focus_dim_paragraph = MenuItemBuilder::with_id("view:focus-dim:paragraph", "Paragraph")
+        .build(app)?;
+    let focus_dim_sentence = MenuItemBuilder::with_id("view:focus-dim:sentence", "Sentence")
+        .build(app)?;
+    let focus_dim_off = MenuItemBuilder::with_id("view:focus-dim:off", "Off").build(app)?;
+    let focus_dim_submenu = SubmenuBuilder::new(app, "Focus Dim")
+        .item(&focus_dim_paragraph)
+        .item(&focus_dim_sentence)
+        .item(&focus_dim_off)
+        .build()?;
+
+    let view_submenu = SubmenuBuilder::new(app, "View")
+        .item(
+            &MenuItemBuilder::with_id("palette:commands", "Command Palette…")
+                .accelerator("CmdOrCtrl+Shift+P")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("palette:files", "Go to File…")
+                .accelerator("CmdOrCtrl+P")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("view:jump-heading", "Jump to Heading…")
+                .accelerator("CmdOrCtrl+Shift+G")
+                .build(app)?,
+        )
+        .separator()
+        .item(
+            &MenuItemBuilder::with_id("view:toggle-left", "Toggle Files Sidebar")
+                .accelerator("CmdOrCtrl+\\")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("view:toggle-right", "Toggle Outline")
+                .accelerator("CmdOrCtrl+Shift+\\")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("view:focus", "Focus Mode")
+                .accelerator("CmdOrCtrl+Shift+F")
+                .build(app)?,
+        )
+        .item(&focus_dim_submenu)
+        .separator()
+        .item(
+            &MenuItemBuilder::with_id("view:toggle-line-numbers", "Toggle Line Numbers")
+                .build(app)?,
+        )
+        .separator()
+        .item(&theme_submenu)
+        .item(&appearance_submenu)
+        .item(&mode_submenu)
+        .build()?;
+
+    let window_submenu = SubmenuBuilder::new(app, "Window")
+        .minimize()
+        .maximize()
+        .build()?;
+
+    MenuBuilder::new(app)
+        .items(&[
+            &app_submenu,
+            &file_submenu,
+            &edit_submenu,
+            &view_submenu,
+            &window_submenu,
+        ])
+        .build()
+}
+
+pub fn install<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
+    let menu = build(app)?;
+    app.set_menu(menu)?;
+    let app_clone = app.clone();
+    app.on_menu_event(move |_app, event| {
+        let id = event.id().as_ref();
+        if let Some(window) = app_clone.get_webview_window("main") {
+            let _ = window.emit("markdusk://menu", id);
+        }
+    });
+    Ok(())
+}

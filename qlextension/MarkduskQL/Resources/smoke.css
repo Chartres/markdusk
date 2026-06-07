@@ -1,0 +1,25 @@
+body.markdusk {
+  font-family: ui-serif, Charter, "Iowan Old Style", Georgia, serif;
+  background: #eee9de; color: #2a2c2c;
+  max-width: 720px; margin: 32px auto; padding: 0 24px;
+  line-height: 1.65; font-size: 16px;
+}
+.markdusk h1, .markdusk h2, .markdusk h3, .markdusk h4, .markdusk h5, .markdusk h6 { color: #3d6a5e; font-weight: 700; }
+.markdusk h1 { font-size: 1.7em; }
+.markdusk h2 { font-size: 1.4em; }
+.markdusk h3 { font-size: 1.2em; }
+.markdusk a { color: #3d6a5e; }
+.markdusk p { margin: 0.6em 0; }
+.markdusk blockquote { border-left: 3px solid #5d8a7e; color: #5d8a7e; padding-left: 12px; font-style: italic; }
+.markdusk code { font-family: "JetBrains Mono", ui-monospace, monospace; background: #1d2222; color: #dfd8c6; padding: 1px 4px; border-radius: 3px; }
+.markdusk pre { background: #1d2222; color: #dfd8c6; padding: 12px; border-radius: 6px; overflow-x: auto; }
+.markdusk pre code { background: transparent; padding: 0; }
+.markdusk table { border-collapse: collapse; }
+.markdusk th, .markdusk td { border: 1px solid #d2cbb8; padding: 6px 10px; }
+.markdusk th { background: rgba(61,106,94,0.06); }
+@media (prefers-color-scheme: dark) {
+  body.markdusk { background: #1d2222; color: #dcd6c4; }
+  .markdusk h1, .markdusk h2, .markdusk h3, .markdusk h4, .markdusk h5, .markdusk h6 { color: #88b3a4; }
+  .markdusk a { color: #88b3a4; }
+  .markdusk th, .markdusk td { border-color: #262b2b; }
+}
