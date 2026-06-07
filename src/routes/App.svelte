@@ -30,6 +30,7 @@
   import OutlinePanel from "$lib/components/OutlinePanel.svelte";
   import StatusBar from "$lib/components/StatusBar.svelte";
   import CommandPalette from "$lib/components/CommandPalette.svelte";
+  import StickyHeading from "$lib/components/StickyHeading.svelte";
   import type { FileNode } from "$lib/ipc/types.gen";
   import { EditorSelection } from "@codemirror/state";
   import type { EditorView } from "@codemirror/view";
@@ -53,6 +54,17 @@
   let paletteMode = $state<"none" | "commands" | "files" | "headings">("none");
 
   let view: EditorView | undefined;
+  let scrollTop = $state(0);
+  let contentTopByteOffset = $state<number | null>(null);
+
+  function updateScrollState() {
+    if (!view) return;
+    const dom = view.scrollDOM;
+    scrollTop = dom.scrollTop;
+    // Find the byte offset of the line currently at the top of the viewport.
+    const topPos = view.posAtCoords({ x: dom.getBoundingClientRect().left + 32, y: dom.getBoundingClientRect().top + 8 });
+    contentTopByteOffset = topPos ?? 0;
+  }
 
   function flattenWorkspace(node: FileNode | null): { path: string; name: string }[] {
     if (!node) return [];
@@ -161,6 +173,11 @@
       (next) => tabs.update(next),
       () => tabs.active.path,
     );
+
+    // Wire scroll tracking for sticky-heading.
+    const onScroll = () => updateScrollState();
+    view.scrollDOM.addEventListener("scroll", onScroll, { passive: true });
+    queueMicrotask(updateScrollState);
 
     void (async () => {
       try {
@@ -416,6 +433,7 @@
     return () => {
       void unlistenOpen.then((u) => u());
       void unlistenMenu.then((u) => u());
+      view?.scrollDOM.removeEventListener("scroll", onScroll);
       document.removeEventListener("keydown", onKey);
       view?.destroy();
     };
@@ -695,6 +713,14 @@
   <main>
     <div class="editor-wrap">
       <div bind:this={container} class="editor"></div>
+      {#if !focusMode}
+        <StickyHeading
+          entries={outline.entries}
+          {scrollTop}
+          {contentTopByteOffset}
+          onJump={jumpTo}
+        />
+      {/if}
     </div>
     {#if !focusMode}
       <StatusBar
@@ -762,6 +788,7 @@
     display: flex;
     justify-content: center;
     min-height: 0;
+    position: relative; /* anchor for absolutely-positioned StickyHeading */
   }
   .editor {
     width: 100%;
