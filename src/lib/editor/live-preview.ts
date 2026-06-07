@@ -15,6 +15,11 @@ import { type Extension, RangeSet, RangeSetBuilder } from "@codemirror/state";
 const HIDDEN = Decoration.replace({});
 const ACTIVE_LINE = Decoration.line({ class: "cm-md-active" });
 
+// CodeMark covers both inline-code backticks AND fenced-code ``` delimiters.
+// Hiding the fence delimiters made the closing ``` line look empty, so users
+// couldn't tell where the block ended (or how to type the closing fence).
+// We keep fenced delimiters visible (checked at decoration time via parent
+// node) and only hide inline-code backticks.
 const HIDABLE_NODES = new Set([
   "HeaderMark",
   "EmphasisMark",
@@ -42,6 +47,12 @@ function buildDecorations(view: EditorView): DecorationSet {
         if (!HIDABLE_NODES.has(node.name)) return;
         const line = view.state.doc.lineAt(node.from);
         if (line.number === activeLine.number) return;
+        // Keep fenced-code ``` delimiters visible so the user can see where a
+        // code block opens and closes. Only hide inline-code backticks.
+        if (node.name === "CodeMark") {
+          const parentName = node.node.parent?.name;
+          if (parentName === "FencedCode") return;
+        }
         // HeaderMark covers only the '#' chars, not the space after them.
         // Extend the hidden range over a single trailing space so '# Hello'
         // renders as 'Hello' (not ' Hello').

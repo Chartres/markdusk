@@ -49,4 +49,20 @@ describe("livePreview decoration", () => {
     const view = makeView("**bold**\nother", 9);
     expect(lineText(view, 1)).toBe("bold");
   });
+
+  it("keeps fenced-code ``` delimiters visible on inactive lines", () => {
+    // The opening and closing fence must remain visible even when the cursor
+    // is far from them — otherwise the user can't see where the block ends.
+    const doc = "```rust\nfn main() {}\n```\nafter";
+    // Cursor at end ("after" line) — both fence lines are inactive.
+    const view = makeView(doc, doc.length);
+    expect(lineText(view, 1)).toBe("```rust");
+    expect(lineText(view, 3)).toBe("```");
+  });
+
+  it("hides inline `code` backticks on an inactive line", () => {
+    // Cursor on line 2; line 1 inline code backticks should be hidden.
+    const view = makeView("`x`\nbody", 5);
+    expect(lineText(view, 1)).toBe("x");
+  });
 });
