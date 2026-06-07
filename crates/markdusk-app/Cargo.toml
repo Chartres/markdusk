@@ -22,6 +22,7 @@ markdusk-core = { path = "../markdusk-core" }
 thiserror.workspace = true
 base64 = "0.22"
 chrono = "0.4"
+which = "7"
 
 [dev-dependencies]
 tempfile = "3"

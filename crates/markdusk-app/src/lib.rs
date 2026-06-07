@@ -26,6 +26,7 @@ pub fn run() {
             commands::outline_cmd,
             commands::save_pasted_image,
             commands::export_html,
+            commands::export_docx,
             commands::render_html_for_clipboard,
             drain_pending_opens,
         ])

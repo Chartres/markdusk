@@ -18,7 +18,7 @@ anyhow = "1"
 
 [workspace.dependencies.tokio]
 version = "1"
-features = ["macros", "rt-multi-thread", "fs", "io-util", "time"]
+features = ["macros", "rt-multi-thread", "fs", "io-util", "time", "process"]
 
 [profile.release]
 lto = "thin"

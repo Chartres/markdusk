@@ -8,11 +8,18 @@
     setSpellCheck,
     setFocusDim,
     setSmartPunctuation,
+    setLineNumbers,
     openFind,
     openReplace,
     type FocusDimMode,
   } from "$lib/editor/editor";
-  import { openFile, saveFile, exportHtml, renderHtmlForClipboard } from "$lib/ipc/commands";
+  import {
+    openFile,
+    saveFile,
+    exportHtml,
+    exportDocx,
+    renderHtmlForClipboard,
+  } from "$lib/ipc/commands";
   import { createTabsStore } from "$lib/stores/tabs.svelte";
   import { createWorkspaceStore } from "$lib/stores/workspace.svelte";
   import { createOutlineStore } from "$lib/stores/outline.svelte";
@@ -41,6 +48,7 @@
   let spellOn = $state(true);
   let smartPunct = $state(false);
   let focusDimMode = $state<FocusDimMode>("paragraph");
+  let lineNumsOn = $state(false);
   let currentTheme = $state<"smoke" | "amber">("smoke");
   let paletteMode = $state<"none" | "commands" | "files" | "headings">("none");
 
@@ -125,15 +133,16 @@
     void outline.refresh(text);
   });
 
-  $effect(() => {
-    const enabled = focusMode;
-    if (view) setTypewriter(view, enabled);
-  });
-
-  // When focus mode is on, apply the user's preferred dim mode; off otherwise.
-  $effect(() => {
+  function applyFocusMode() {
     if (!view) return;
+    setTypewriter(view, focusMode);
     setFocusDim(view, focusMode ? focusDimMode : "off");
+  }
+
+  $effect(() => {
+    void focusMode;
+    void focusDimMode;
+    applyFocusMode();
   });
 
   function jumpTo(byteOffset: number) {
@@ -256,6 +265,23 @@
           }
           break;
         }
+        case "export:docx": {
+          const { save } = await import("@tauri-apps/plugin-dialog");
+          const target = await save({
+            defaultPath: "export.docx",
+            filters: [{ name: "Word document", extensions: ["docx"] }],
+          });
+          if (typeof target === "string") {
+            try {
+              await exportDocx(target, tabs.active.contents);
+            } catch (e) {
+              alert(
+                `DOCX export failed:\n\n${e instanceof Error ? e.message : String(e)}\n\nIf this says "pandoc not found", install it with:\n  brew install pandoc`,
+              );
+            }
+          }
+          break;
+        }
         case "export:pdf": {
           const html = await renderHtmlForClipboard(tabs.active.contents, currentTheme);
           const w = window.open("", "_blank");
@@ -328,6 +354,10 @@
         case "edit:smart-punct":
           smartPunct = !smartPunct;
           if (view) setSmartPunctuation(view, smartPunct);
+          break;
+        case "view:toggle-line-numbers":
+          lineNumsOn = !lineNumsOn;
+          if (view) setLineNumbers(view, lineNumsOn);
           break;
         case "view:focus-dim:paragraph":
           focusDimMode = "paragraph";
@@ -551,6 +581,15 @@
       },
     },
     {
+      id: "view:toggle-line-numbers",
+      label: lineNumsOn ? "View: Hide Line Numbers" : "View: Show Line Numbers",
+      keywords: ["gutter", "numbers"],
+      onRun: () => {
+        lineNumsOn = !lineNumsOn;
+        if (view) setLineNumbers(view, lineNumsOn);
+      },
+    },
+    {
       id: "mode:vim",
       label: vimOn ? "Editor Mode: Default" : "Editor Mode: Vim",
       onRun: () => {
@@ -569,6 +608,27 @@
         });
         if (typeof target === "string") {
           await exportHtml(target, tabs.active.contents, currentTheme);
+        }
+      },
+    },
+    {
+      id: "export:docx",
+      label: "Export: DOCX… (Word)",
+      keywords: ["word", "office", "pandoc"],
+      onRun: async () => {
+        const { save } = await import("@tauri-apps/plugin-dialog");
+        const target = await save({
+          defaultPath: "export.docx",
+          filters: [{ name: "Word document", extensions: ["docx"] }],
+        });
+        if (typeof target === "string") {
+          try {
+            await exportDocx(target, tabs.active.contents);
+          } catch (e) {
+            alert(
+              `DOCX export failed:\n\n${e instanceof Error ? e.message : String(e)}`,
+            );
+          }
         }
       },
     },

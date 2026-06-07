@@ -33,6 +33,10 @@ export async function exportHtml(
   await invoke<void>("export_html", { targetPath, source, theme });
 }
 
+export async function exportDocx(targetPath: string, source: string): Promise<void> {
+  await invoke<void>("export_docx", { targetPath, source });
+}
+
 export async function renderHtmlForClipboard(
   source: string,
   theme: "smoke" | "amber",

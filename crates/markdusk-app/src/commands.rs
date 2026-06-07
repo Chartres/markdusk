@@ -20,6 +20,54 @@ pub async fn export_html(target_path: String, source: String, theme: String) -> 
         .map_err(|e| e.to_string())
 }
 
+/// Export the current document as DOCX via the `pandoc` sidecar.
+/// Returns an error string the frontend can surface; the frontend handles
+/// the "pandoc not installed" case by suggesting `brew install pandoc`.
+#[tauri::command]
+pub async fn export_docx(target_path: String, source: String) -> Result<(), String> {
+    // Look for pandoc on PATH or in common Homebrew locations.
+    let pandoc_bin = which::which("pandoc")
+        .ok()
+        .or_else(|| {
+            ["/opt/homebrew/bin/pandoc", "/usr/local/bin/pandoc"]
+                .iter()
+                .map(std::path::PathBuf::from)
+                .find(|p| p.exists())
+        })
+        .ok_or_else(|| "pandoc not found — install with: brew install pandoc".to_string())?;
+
+    use tokio::io::AsyncWriteExt;
+    let mut child = tokio::process::Command::new(&pandoc_bin)
+        .args([
+            "--from=gfm",
+            "--to=docx",
+            "--standalone",
+            "-o",
+            &target_path,
+        ])
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("spawn pandoc failed: {e}"))?;
+
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin
+            .write_all(source.as_bytes())
+            .await
+            .map_err(|e| format!("write to pandoc stdin failed: {e}"))?;
+    }
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("pandoc wait failed: {e}"))?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("pandoc exited {}: {}", output.status, stderr));
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub fn render_html_for_clipboard(source: String, theme: String) -> String {
     render_html(&source, parse_theme(&theme))

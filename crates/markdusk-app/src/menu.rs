@@ -31,12 +31,14 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
 
     let export_html_item = MenuItemBuilder::with_id("export:html", "Export as HTML…").build(app)?;
     let export_pdf_item = MenuItemBuilder::with_id("export:pdf", "Export as PDF…").build(app)?;
+    let export_docx_item = MenuItemBuilder::with_id("export:docx", "Export as DOCX…").build(app)?;
     let export_copy_rich_item = MenuItemBuilder::with_id("export:copy-rich", "Copy as Rich Text")
         .accelerator("CmdOrCtrl+Shift+C")
         .build(app)?;
     let export_submenu = SubmenuBuilder::new(app, "Export")
         .item(&export_html_item)
         .item(&export_pdf_item)
+        .item(&export_docx_item)
         .item(&export_copy_rich_item)
         .build()?;
 
@@ -146,6 +148,11 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
                 .build(app)?,
         )
         .item(&focus_dim_submenu)
+        .separator()
+        .item(
+            &MenuItemBuilder::with_id("view:toggle-line-numbers", "Toggle Line Numbers")
+                .build(app)?,
+        )
         .separator()
         .item(&theme_submenu)
         .item(&appearance_submenu)

@@ -1,5 +1,11 @@
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
-import { EditorView, ViewPlugin, type ViewUpdate, keymap } from "@codemirror/view";
+import {
+  EditorView,
+  ViewPlugin,
+  type ViewUpdate,
+  keymap,
+  lineNumbers as cmLineNumbers,
+} from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import {
   markdown,
@@ -119,6 +125,14 @@ export function openReplace(view: EditorView): void {
   });
 }
 
+export const lineNumbersCompartment = new Compartment();
+
+export function setLineNumbers(view: EditorView, enabled: boolean): void {
+  view.dispatch({
+    effects: lineNumbersCompartment.reconfigure(enabled ? cmLineNumbers() : []),
+  });
+}
+
 export const spellCheckCompartment = new Compartment();
 
 export function setSpellCheck(view: EditorView, enabled: boolean): void {
@@ -140,6 +154,7 @@ export function createEditor(
   const extensions: Extension[] = [
     vimCompartment.of([]),
     typewriterCompartment.of([]),
+    lineNumbersCompartment.of([]),
     spellCheckCompartment.of(
       EditorView.contentAttributes.of({ spellcheck: "true", autocorrect: "on" }),
     ),
