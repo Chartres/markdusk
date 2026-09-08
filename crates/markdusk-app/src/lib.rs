@@ -11,7 +11,11 @@ pub struct PendingOpens(pub Mutex<Vec<String>>);
 
 #[tauri::command]
 fn drain_pending_opens(state: tauri::State<'_, PendingOpens>) -> Vec<String> {
-    state.0.lock().map(|mut v| std::mem::take(&mut *v)).unwrap_or_default()
+    state
+        .0
+        .lock()
+        .map(|mut v| std::mem::take(&mut *v))
+        .unwrap_or_default()
 }
 
 pub fn run() {
@@ -35,10 +39,11 @@ pub fn run() {
             // Capture file paths from launch args (Finder double-click cold-start).
             let pending = app.state::<PendingOpens>();
             for arg in std::env::args().skip(1) {
-                if !arg.starts_with('-') && std::path::Path::new(&arg).exists() {
-                    if let Ok(mut v) = pending.0.lock() {
-                        v.push(arg);
-                    }
+                if !arg.starts_with('-')
+                    && std::path::Path::new(&arg).exists()
+                    && let Ok(mut v) = pending.0.lock()
+                {
+                    v.push(arg);
                 }
             }
             Ok(())
