@@ -1,0 +1,4 @@
+Contact: https://github.com/Chartres/markdusk/issues
+Expires: 2027-09-01T00:00:00.000Z
+Preferred-Languages: en, cs
+Canonical: https://markdusk.dravec.org/.well-known/security.txt

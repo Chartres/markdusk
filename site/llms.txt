@@ -1,0 +1,30 @@
+# Markdusk
+
+> A fast, free, native macOS markdown editor. No account, no cloud, no plugins — it just
+> opens the file. Open source (Rust + Tauri + Svelte), signed and notarized, distributed as a
+> DMG on GitHub Releases. English.
+
+## What it is
+- A desktop editor for .md files on macOS: open a file, write, save. Nothing else to set up.
+- Native look and speed; no Electron. Includes a Quick Look extension so markdown previews in
+  Finder.
+- Free, no account, no cloud sync, no plugin system by design (see the roadmap in the repo for
+  what is and is not planned).
+
+## How to get it
+- Download the latest DMG: https://github.com/Chartres/markdusk/releases/latest
+- Landing page with screenshots: https://markdusk.dravec.org/
+- Build from source: https://github.com/Chartres/markdusk (README)
+
+## Provenance
+- Source code, changelog and release notes live in the GitHub repository; releases are
+  code-signed and notarized by Apple (Gatekeeper clean).
+
+## Links
+- Landing: https://markdusk.dravec.org/
+- Source code: https://github.com/Chartres/markdusk
+- Sitemap: https://markdusk.dravec.org/sitemap.xml
+- More from the author: https://flywheel.dravec.org/
+
+## Contact
+- Issues: https://github.com/Chartres/markdusk/issues
