@@ -39,10 +39,11 @@ pub fn run() {
             // Capture file paths from launch args (Finder double-click cold-start).
             let pending = app.state::<PendingOpens>();
             for arg in std::env::args().skip(1) {
-                if !arg.starts_with('-') && std::path::Path::new(&arg).exists() {
-                    if let Ok(mut v) = pending.0.lock() {
-                        v.push(arg);
-                    }
+                if !arg.starts_with('-')
+                    && std::path::Path::new(&arg).exists()
+                    && let Ok(mut v) = pending.0.lock()
+                {
+                    v.push(arg);
                 }
             }
             Ok(())
