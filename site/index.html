@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markdusk — a Mac-native markdown editor</title>
+<meta name="description" content="A fast, free, native macOS markdown editor. No account, no cloud, no plugins. It just opens the file.">
+<link rel="canonical" href="https://markdusk.dravec.org/">
+<!-- Discoverability kit (flywheel Standard §5c): share card is the 1200×630 og.png generated
+     by flywheel scripts/og-image.mjs — a screenshot crops badly in most unfurlers. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Markdusk">
+<meta property="og:locale" content="en_GB">
+<meta property="og:url" content="https://markdusk.dravec.org/">
+<meta property="og:title" content="Markdusk — a Mac-native markdown editor">
+<meta property="og:description" content="A Mac-native markdown editor. Free, no account, no cloud, no plugins. It just opens the file.">
+<meta property="og:image" content="https://markdusk.dravec.org/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Markdusk — a Mac-native markdown editor">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Markdusk — a Mac-native markdown editor">
+<meta name="twitter:description" content="A Mac-native markdown editor. Free, no account, no cloud, no plugins. It just opens the file.">
+<meta name="twitter:image" content="https://markdusk.dravec.org/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Markdusk",
+ "url":"https://markdusk.dravec.org/",
+ "description":"A fast, free, native macOS markdown editor. No account, no cloud, no plugins. It just opens the file.",
+ "applicationCategory":"DeveloperApplication","operatingSystem":"macOS",
+ "downloadUrl":"https://github.com/Chartres/markdusk/releases/latest",
+ "isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  :root {
+    --paper: #efecdb;
+    --paper-2: #f4f1e4;
+    --ink: #35402c;
+    --olive: #6e7f2f;
+    --gold: #8a6d3b;
+    --muted: #7c7a62;
+    --rule: #d6d0b2;
+    --dusk: #1f241a;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: ui-serif, Charter, "Iowan Old Style", Georgia, serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--olive); }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+  /* hero */
+  .hero {
+    text-align: center;
+    padding: 88px 24px 56px;
+    /* AI hero.png if present, else a soft cream→dusk gradient */
+    background:
+      linear-gradient(180deg, rgba(239,236,219,0.4) 0%, rgba(239,236,219,0.92) 78%, var(--paper) 100%),
+      image-set(url("hero.png") 1x) center / cover no-repeat,
+      radial-gradient(120% 80% at 70% 120%, rgba(31,36,26,0.10), transparent 60%);
+    background-color: var(--paper);
+  }
+  .fleuron { color: var(--olive); font-size: 30px; line-height: 1; opacity: 0.8; }
+  h1 {
+    font-size: clamp(44px, 8vw, 76px);
+    margin: 12px 0 6px;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  .tagline { font-size: clamp(17px, 2.6vw, 22px); color: var(--muted); font-style: italic; margin: 0 0 8px; }
+  .sub { max-width: 560px; margin: 14px auto 30px; color: var(--ink); font-size: 17px; }
+
+  .cta {
+    display: inline-block;
+    background: var(--olive);
+    color: var(--paper-2);
+    text-decoration: none;
+    font-weight: 700;
+    padding: 13px 30px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition: background 120ms ease, transform 120ms ease;
+  }
+  .cta:hover { background: #5c6b27; transform: translateY(-1px); }
+  .cta-note { display: block; margin-top: 10px; font-size: 13px; color: var(--muted); }
+
+  .shot {
+    margin: 44px auto 0;
+    max-width: 880px;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    box-shadow: 0 24px 60px -28px rgba(31,36,26,0.45);
+    overflow: hidden;
+    background: #fff;
+  }
+  .shot img { display: block; width: 100%; height: auto; }
+
+  /* divider */
+  .divider { text-align: center; margin: 64px 0 56px; }
+  .divider img { max-width: 480px; width: 70%; height: auto; opacity: 0.85; }
+  .divider .rule-fallback {
+    height: 1px; background: var(--rule); max-width: 420px; margin: 0 auto; position: relative;
+  }
+  .divider .rule-fallback::after {
+    content: "\2767"; color: var(--olive); position: absolute; top: -15px; left: 50%;
+    transform: translateX(-50%); background: var(--paper); padding: 0 12px; font-size: 18px;
+  }
+
+  /* sections */
+  section h2 { font-size: 28px; margin: 0 0 8px; }
+  .why { max-width: 680px; margin: 0 auto; }
+  .why p { font-size: 18px; }
+  .why .em { color: var(--gold); font-style: italic; }
+
+  .feat { margin-top: 56px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px 40px; }
+  @media (max-width: 640px) { .feat { grid-template-columns: 1fr; } }
+  .feat h3 { margin: 0 0 4px; font-size: 18px; color: var(--olive); }
+  .feat p { margin: 0; color: var(--ink); font-size: 15.5px; }
+
+  .isnt { margin: 60px auto 0; max-width: 680px; color: var(--muted); font-size: 16px; font-style: italic; text-align: center; }
+
+  footer { margin-top: 72px; border-top: 1px solid var(--rule); padding: 28px 24px 56px; text-align: center; color: var(--muted); font-size: 14px; }
+  footer a { color: var(--gold); }
+  .badge { display: inline-flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="fleuron">&#10087;</div>
+  <h1>Markdusk</h1>
+  <p class="tagline">a Mac-native markdown editor</p>
+  <p class="sub">It just opens the file. No account, no cloud, no plugins, no
+  knowledge-management religion — fast and native, the way TextEdit should have been.</p>
+  <a class="cta" href="https://github.com/Chartres/markdusk/releases/latest">Download for macOS</a>
+  <span class="cta-note">Free &amp; open-source · signed &amp; notarized · macOS 12+ · Apple&nbsp;Silicon and Intel</span>
+
+  <div class="shot">
+    <img src="screenshot-editor.png" alt="The Markdusk editor showing soft-WYSIWYG markdown in the Smoke theme" width="880">
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="divider"><img src="ornament.png" alt="" onerror="this.parentNode.innerHTML='&lt;div class=&quot;rule-fallback&quot;&gt;&lt;/div&gt;'"></div>
+
+  <section class="why">
+    <h2>Why it exists</h2>
+    <p>The default <code>.md</code> experience on a Mac is TextEdit showing you
+    raw asterisks. The good alternatives are paid (Bear, iA&nbsp;Writer, Typora)
+    or ask you to adopt a whole methodology (Obsidian). Markdusk is the third
+    option: <span class="em">free, fast, native, and opinionated</span> — it
+    opens the file and gets out of the way.</p>
+  </section>
+
+  <div class="feat">
+    <div><h3>Soft WYSIWYG</h3><p>Markers hide on inactive lines, stay on the line your cursor is on. Live KaTeX and Mermaid in the buffer.</p></div>
+    <div><h3>Fast everything</h3><p>Rust core, Tauri shell — no Electron. Opens from Finder in under a second; stays smooth past a megabyte.</p></div>
+    <div><h3>Focus Mode</h3><p>iA-style sentence and paragraph dim with typewriter scroll, for when the draft needs all of you.</p></div>
+    <div><h3>Keyboard-first</h3><p>Command palette, fuzzy switcher, multi-cursor, regex find &amp; replace, table tools that keep the pipes aligned.</p></div>
+    <div><h3>Wikilinks, no vault</h3><p><code>[[file]]</code> autocompletes and &#8984;-click jumps — local linking without moving into Obsidian.</p></div>
+    <div><h3>A theme with a face</h3><p>Smoke, Amber, and <strong>Verdure</strong> — a herbal Art Nouveau palette most editors would never ship.</p></div>
+  </div>
+
+  <p class="isnt">It's not a knowledge base, not a CMS, not collaborative,
+  not cross-platform, not AI-first. Mac-only, on purpose.</p>
+
+</div>
+
+<footer>
+  <div class="badge">
+    <a href="https://github.com/Chartres/markdusk">GitHub</a>
+    <a href="https://github.com/Chartres/markdusk/releases/latest">Releases</a>
+    <a href="https://github.com/Chartres/markdusk/issues">Report an issue</a>
+  </div>
+  <div>Free &amp; open-source under the MIT license. No telemetry, no account, no lock-in. &#127807;</div>
+</footer>
+
+</body>
+</html>
