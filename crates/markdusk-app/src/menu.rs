@@ -60,10 +60,10 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .accelerator("CmdOrCtrl+Alt+F")
         .build(app)?;
 
-    let spell_check_item = MenuItemBuilder::with_id("edit:spell-check", "Toggle Spell Check")
-        .build(app)?;
-    let smart_punct_item = MenuItemBuilder::with_id("edit:smart-punct", "Toggle Smart Punctuation")
-        .build(app)?;
+    let spell_check_item =
+        MenuItemBuilder::with_id("edit:spell-check", "Toggle Spell Check").build(app)?;
+    let smart_punct_item =
+        MenuItemBuilder::with_id("edit:smart-punct", "Toggle Smart Punctuation").build(app)?;
 
     let edit_submenu = SubmenuBuilder::new(app, "Edit")
         .undo()
@@ -104,10 +104,10 @@ pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .item(&mode_vim)
         .build()?;
 
-    let focus_dim_paragraph = MenuItemBuilder::with_id("view:focus-dim:paragraph", "Paragraph")
-        .build(app)?;
-    let focus_dim_sentence = MenuItemBuilder::with_id("view:focus-dim:sentence", "Sentence")
-        .build(app)?;
+    let focus_dim_paragraph =
+        MenuItemBuilder::with_id("view:focus-dim:paragraph", "Paragraph").build(app)?;
+    let focus_dim_sentence =
+        MenuItemBuilder::with_id("view:focus-dim:sentence", "Sentence").build(app)?;
     let focus_dim_off = MenuItemBuilder::with_id("view:focus-dim:off", "Off").build(app)?;
     let focus_dim_submenu = SubmenuBuilder::new(app, "Focus Dim")
         .item(&focus_dim_paragraph)

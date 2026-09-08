@@ -11,7 +11,11 @@ pub struct PendingOpens(pub Mutex<Vec<String>>);
 
 #[tauri::command]
 fn drain_pending_opens(state: tauri::State<'_, PendingOpens>) -> Vec<String> {
-    state.0.lock().map(|mut v| std::mem::take(&mut *v)).unwrap_or_default()
+    state
+        .0
+        .lock()
+        .map(|mut v| std::mem::take(&mut *v))
+        .unwrap_or_default()
 }
 
 pub fn run() {
